@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+*{
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+@theme {
+  --color-primary: ;
+}
+
+/* Smooth theme transition on key properties */
+html {
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+/* Dark mode base body */
+html.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Custom scrollbar for dark mode */
+html.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+html.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
