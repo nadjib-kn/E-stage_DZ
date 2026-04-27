@@ -1,45 +1,37 @@
 // src/context/AdminContext.jsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { readDB, writeDB } from '../utils/storageHelper';
+import React, { createContext, useContext, useMemo } from 'react';
+import { useDatabase } from './DatabaseContext';
 
 const AdminContext = createContext();
 
 export const AdminProvider = ({ children }) => {
-  // 1. Load the entire database
-  const [db, setDb] = useState(readDB());
-
-  // 2. Auto-save any changes the Admin makes
-  useEffect(() => {
-    if (db) {
-      writeDB(db);
-    }
-  }, [db]);
+  const { db, updateDb } = useDatabase();
 
   // --------------------------------------------------------
   // DERIVED STATE: Easily access lists of specific items
   // Added optional chaining (?.) so it never crashes on empty data
   // --------------------------------------------------------
   const allUsers = db?.users || [];
-  const allStudents = allUsers.filter(u => u?.role === 'student');
-  const allCompanies = allUsers.filter(u => u?.role === 'company');
+  const allStudents = useMemo(() => allUsers.filter(u => u?.role === 'student'), [allUsers]);
+  const allCompanies = useMemo(() => allUsers.filter(u => u?.role === 'company'), [allUsers]);
   const allJobs = db?.jobs || [];
   const allApplications = db?.applications || [];
   const allTickets = db?.tickets || []; 
 
-  const adminStats = {
+  const adminStats = useMemo(() => ({
     totalStudents: allStudents.length,
     totalCompanies: allCompanies.length,
     activeJobs: allJobs.filter(j => j?.status === 'Active').length,
     totalApplications: allApplications.length,
     pendingCompanies: allCompanies.filter(c => c?.verificationStatus === 'pending').length,
     openTickets: allTickets.filter(t => t?.status === 'open').length,
-  };
+  }), [allStudents, allCompanies, allJobs, allApplications, allTickets]);
 
   // --------------------------------------------------------
   // ADMIN POWERS - USER MANAGEMENT
   // --------------------------------------------------------
   const deleteUser = (userId) => {
-    setDb(prev => {
+    updateDb(prev => {
       const userToDelete = prev.users.find(u => u.id === userId);
       let updatedJobs = prev.jobs;
       let updatedApplications = prev.applications;
@@ -63,7 +55,7 @@ export const AdminProvider = ({ children }) => {
   };
 
   const suspendUser = (userId) => {
-    setDb(prev => ({
+    updateDb(prev => ({
       ...prev,
       users: prev.users.map(u => 
         u.id === userId 
@@ -77,7 +69,7 @@ export const AdminProvider = ({ children }) => {
   // ADMIN POWERS - COMPANY VALIDATION
   // --------------------------------------------------------
   const approveCompany = (companyId) => {
-    setDb(prev => ({
+    updateDb(prev => ({
       ...prev,
       users: prev.users.map(u =>
         u.id === companyId ? { ...u, verificationStatus: 'approved' } : u
@@ -86,7 +78,7 @@ export const AdminProvider = ({ children }) => {
   };
 
   const rejectCompany = (companyId) => {
-    setDb(prev => ({
+    updateDb(prev => ({
       ...prev,
       users: prev.users.map(u =>
         u.id === companyId ? { ...u, verificationStatus: 'rejected' } : u
@@ -94,20 +86,29 @@ export const AdminProvider = ({ children }) => {
     }));
   };
 
+  // Convenience wrapper used by AdminCompanyValidation
+  const updateCompanyStatus = (companyId, newStatus) => {
+    if (newStatus === 'approved') {
+      approveCompany(companyId);
+    } else if (newStatus === 'rejected') {
+      rejectCompany(companyId);
+    }
+  };
+
   // --------------------------------------------------------
   // ADMIN POWERS - JOBS/INTERNSHIPS
   // --------------------------------------------------------
   const deleteJob = (jobId) => {
-    setDb(prev => ({
+    updateDb(prev => ({
       ...prev,
       jobs: prev.jobs.filter(job => job.id !== jobId),
       applications: prev.applications.filter(app => app.jobId !== jobId)
     }));
   };
 
-  // NEW: Block/Unblock Job Logic
+  // Block/Unblock Job Logic
   const blockJob = (jobId) => {
-    setDb(prev => ({
+    updateDb(prev => ({
       ...prev,
       jobs: prev.jobs.map(j => 
         j.id === jobId 
@@ -122,7 +123,7 @@ export const AdminProvider = ({ children }) => {
   // ADMIN POWERS - CONFLICTS & TICKETS
   // --------------------------------------------------------
   const resolveTicket = (ticketId) => {
-    setDb(prev => ({
+    updateDb(prev => ({
       ...prev,
       tickets: prev.tickets.map(t =>
         t.id === ticketId ? { ...t, status: 'resolved' } : t
@@ -142,9 +143,10 @@ export const AdminProvider = ({ children }) => {
       deleteUser,
       suspendUser,      
       deleteJob,
-      blockJob,         // Exposed the new blockJob function here
+      blockJob,
       approveCompany,
       rejectCompany,
+      updateCompanyStatus, // FIX: Now exported for AdminCompanyValidation
       resolveTicket
     }}>
       {children}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
+import ErrorBoundary from '../../ErrorBoundary';
 
 const AdminLayout = () => {
   return (
@@ -14,7 +15,9 @@ const AdminLayout = () => {
         
         {/* The Main Content Area (Where pages change based on the route) */}
         <main className="flex-1 overflow-y-auto p-8">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
         
       </div>

@@ -1,7 +1,7 @@
 // src/utils/storageHelper.js
 import { mockDatabase } from '../data/mockData';
 
-const DB_KEY = 'internship_platform_db';
+const DB_KEY = 'internship_platform_db_v3';
 
 export const readDB = () => {
   try {

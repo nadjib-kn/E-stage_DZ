@@ -5,7 +5,19 @@ import { useAuth } from '../../../context/AuthContext';
 
 const AdminDashboardOverview = () => {
   const { currentUser } = useAuth();
-  const { adminStats, allApplications, allUsers } = useAdmin();
+  const { adminStats, allApplications, allUsers, allJobs } = useAdmin();
+
+  // Helper: resolve raw IDs to human-readable names
+  const resolveStudentName = (studentId) => {
+    const user = allUsers.find(u => u.id === studentId);
+    if (!user) return studentId;
+    return user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.name || studentId);
+  };
+
+  const resolveJobTitle = (jobId) => {
+    const job = allJobs.find(j => j.id === jobId);
+    return job ? job.role : jobId;
+  };
 
   const recentApplications = allApplications.slice(0, 4);
   const recentUsers = allUsers.slice(-4).reverse(); 
@@ -95,8 +107,8 @@ const AdminDashboardOverview = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-sm">
-                  <th className="p-4 font-semibold">Student Context</th>
-                  <th className="p-4 font-semibold">Job ID</th>
+                  <th className="p-4 font-semibold">Student</th>
+                  <th className="p-4 font-semibold">Applied For</th>
                   <th className="p-4 font-semibold">Date</th>
                   <th className="p-4 font-semibold">Status</th>
                 </tr>
@@ -107,11 +119,11 @@ const AdminDashboardOverview = () => {
                     <tr key={app.id} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors">
                       <td className="p-4 flex items-center gap-3">
                         <div>
-                          <p className="text-sm font-bold text-slate-900 dark:text-white">Student ID: {app.studentId}</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">{resolveStudentName(app.studentId)}</p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">Applied across platform</p>
                         </div>
                       </td>
-                      <td className="p-4 text-sm font-medium text-slate-700 dark:text-slate-300">{app.jobId}</td>
+                      <td className="p-4 text-sm font-medium text-slate-700 dark:text-slate-300">{resolveJobTitle(app.jobId)}</td>
                       <td className="p-4 text-sm text-slate-500 dark:text-slate-400">{app.dateApplied}</td>
                       <td className="p-4">
                         <span className={`px-3 py-1 text-xs font-bold rounded-full 

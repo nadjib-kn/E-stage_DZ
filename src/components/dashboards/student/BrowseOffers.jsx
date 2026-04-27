@@ -117,37 +117,51 @@ const BrowseOffers = () => {
               
               <div className="p-6 pb-5 flex-grow flex flex-col relative">
                 {/* Status Badge (Top Right) */}
-                {job.hasApplied && (
-                  <div className="absolute top-6 right-6">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
+                <div className="absolute top-6 right-6">
+                  {job.hasApplied ? (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
                       Applied
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-blue-50 dark:bg-blue-500/10 text-[#2563EB] dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                      Accepting
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex gap-4 pr-16 mb-5">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-2xl shrink-0 ${job.logoColor}`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-2xl shrink-0 border border-slate-100 dark:border-slate-700/50 ${job.logoColor}`}>
                     {job.logo}
                   </div>
-                  <div>
+                  <div className="flex flex-col justify-center">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 group-hover:text-[#2563EB] transition-colors" title={job.role}>
                       {job.role}
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium mt-1">{job.company}</p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <p className="text-sm text-slate-600 dark:text-slate-300 font-bold">{job.company}</p>
+                      <span className="text-slate-300 dark:text-slate-600">•</span>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 font-medium flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        {job.posted}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mt-auto">
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 truncate max-w-full">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 truncate max-w-full">
                     <span className="text-base leading-none">📍</span> {job.location}
                   </span>
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 truncate max-w-full">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 truncate max-w-full">
                     <span className="text-base leading-none">💼</span> {job.type}
                   </span>
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 truncate max-w-full">
-                    <span className="text-base leading-none">⏱️</span> {job.posted}
-                  </span>
+                  {job.deadline && (
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 truncate max-w-full">
+                      <span className="text-base leading-none">⏳</span> {job.deadline}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -167,7 +181,7 @@ const BrowseOffers = () => {
                     onClick={() => handleApplyClick(job)}
                     className="px-6 py-2.5 rounded-xl text-sm font-bold transition-all bg-[#2563EB] hover:bg-[#1d4ed8] text-white shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] hover:-translate-y-0.5"
                   >
-                    Quick Apply
+                    View Details
                   </button>
                 )}
               </div>
@@ -189,44 +203,98 @@ const BrowseOffers = () => {
       </div>
 
       {/* ========================================== */}
-      {/* 1. APPLY MODAL */}
+      {/* 1. JOB DETAILS & APPLY MODAL */}
       {/* ========================================== */}
-      {isApplyModalOpen && (
+      {isApplyModalOpen && selectedJob && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-800 rounded-[24px] w-full max-w-md shadow-2xl relative p-8">
-            {!isSuccess ? (
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-blue-50 text-[#2563EB] rounded-full flex items-center justify-center mb-5 ring-8 ring-blue-50/50">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          <div className="bg-white dark:bg-slate-800 rounded-[24px] w-full max-w-2xl shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start shrink-0 bg-slate-50/50 dark:bg-slate-800/50">
+              <div className="flex gap-4">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-2xl shrink-0 border border-slate-100 dark:border-slate-700/50 ${selectedJob.logoColor}`}>
+                  {selectedJob.logo}
                 </div>
-                
-                <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Submit Application</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
-                  You are about to apply for the <span className="font-bold text-slate-900 dark:text-white">{selectedJob?.role}</span> position at <span className="font-bold text-slate-900 dark:text-white">{selectedJob?.company}</span>. Your default profile and resume will be sent to the employer.
-                </p>
-
-                {errorMessage && (
-                  <div className="w-full bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 font-medium mb-6">
-                    {errorMessage}
-                  </div>
-                )}
-
-                <div className="flex gap-3 w-full">
-                  <button onClick={() => setIsApplyModalOpen(false)} className="flex-1 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 rounded-xl text-sm font-bold transition-colors">
-                    Cancel
-                  </button>
-                  <button onClick={confirmApplication} className="flex-1 bg-[#2563EB] hover:bg-[#1d4ed8] text-white px-4 py-3 rounded-xl text-sm font-bold transition-colors shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)]">
-                    Submit Now
-                  </button>
+                <div>
+                  <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1">{selectedJob.role}</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-bold">{selectedJob.company}</p>
                 </div>
               </div>
-            ) : (
-              <div className="py-6 flex flex-col items-center text-center animate-in zoom-in duration-300">
-                <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-5 ring-8 ring-emerald-50/50">
-                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+              <button 
+                onClick={() => setIsApplyModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            {/* Modal Body (Scrollable) */}
+            <div className="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+              {!isSuccess ? (
+                <div className="space-y-8">
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                      <span className="text-base leading-none">📍</span> {selectedJob.location}
+                    </span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                      <span className="text-base leading-none">💼</span> {selectedJob.type}
+                    </span>
+                    {selectedJob.duration && (
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                        <span className="text-base leading-none">⏱️</span> {selectedJob.duration}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3">Job Description</h3>
+                    <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap bg-slate-50 dark:bg-slate-700/30 p-5 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                      {selectedJob.description || "No specific description provided by the company."}
+                    </div>
+                  </div>
+
+                  {/* Requirements */}
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3">Requirements & Skills</h3>
+                    <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap bg-slate-50 dark:bg-slate-700/30 p-5 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                      {selectedJob.requirements || "No specific requirements provided by the company."}
+                    </div>
+                  </div>
+                  
+                  {errorMessage && (
+                    <div className="w-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-sm p-4 rounded-xl border border-red-100 dark:border-red-500/20 font-medium">
+                      {errorMessage}
+                    </div>
+                  )}
                 </div>
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Success!</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Your application has been successfully sent.</p>
+              ) : (
+                <div className="py-12 flex flex-col items-center text-center animate-in zoom-in duration-300 h-full justify-center">
+                  <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 rounded-full flex items-center justify-center mb-6 ring-8 ring-emerald-50/50 dark:ring-emerald-500/20">
+                    <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-3">Application Sent!</h2>
+                  <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Your profile and resume have been securely delivered to <span className="font-bold">{selectedJob?.company}</span>. Good luck!</p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            {!isSuccess && (
+              <div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0 flex items-center justify-between gap-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+                  Your <span className="font-bold">default profile</span> and <span className="font-bold">CV</span> will be sent.
+                </p>
+                <div className="flex gap-3 w-full sm:w-auto">
+                  <button onClick={() => setIsApplyModalOpen(false)} className="px-6 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-bold transition-colors w-full sm:w-auto">
+                    Cancel
+                  </button>
+                  <button onClick={confirmApplication} className="px-8 py-3 bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-xl text-sm font-bold transition-colors shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] w-full sm:w-auto flex items-center justify-center gap-2">
+                    Submit Application
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                  </button>
+                </div>
               </div>
             )}
           </div>

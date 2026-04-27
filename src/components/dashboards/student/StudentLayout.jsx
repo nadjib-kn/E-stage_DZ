@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import ErrorBoundary from '../../ErrorBoundary';
 // TopNavbar import is gone!
 
 const StudentLayout = () => {
@@ -18,7 +19,9 @@ const StudentLayout = () => {
         {/* The Main Content Area (Where pages change) */}
         <main className="flex-1 overflow-y-auto p-10">
           {/* <Outlet /> renders whatever page the user clicks on in the Sidebar. */}
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
         
       </div>

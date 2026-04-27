@@ -92,33 +92,33 @@ const DashboardOverview = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Card */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-5 hover:border-[#2563EB]/30 dark:hover:border-blue-500/50 transition-colors">
-          <div className="w-14 h-14 bg-blue-50 text-[#2563EB] rounded-2xl flex items-center justify-center">
+          <div className="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 text-[#2563EB] dark:text-blue-400 rounded-2xl flex items-center justify-center">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
           </div>
           <div>
-            <p className="text-slate-500 text-sm font-semibold mb-1">Total Applications</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold mb-1">Total Applications</p>
             <h3 className="text-3xl font-black text-slate-900 dark:text-white">{totalApplications}</h3>
           </div>
         </div>
 
         {/* Pending Card */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-5 hover:border-amber-400/30 dark:hover:border-amber-500/50 transition-colors">
-          <div className="w-14 h-14 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center">
+          <div className="w-14 h-14 bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 rounded-2xl flex items-center justify-center">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <div>
-            <p className="text-slate-500 text-sm font-semibold mb-1">Pending Reviews</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold mb-1">Pending Reviews</p>
             <h3 className="text-3xl font-black text-slate-900 dark:text-white">{pendingApplications}</h3>
           </div>
         </div>
 
         {/* Accepted Card */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-5 hover:border-emerald-400/30 dark:hover:border-emerald-500/50 transition-colors">
-          <div className="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center">
+          <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 rounded-2xl flex items-center justify-center">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <div>
-            <p className="text-slate-500 text-sm font-semibold mb-1">Accepted Offers</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold mb-1">Accepted Offers</p>
             <h3 className="text-3xl font-black text-slate-900 dark:text-white">{acceptedApplications}</h3>
           </div>
         </div>
@@ -130,7 +130,7 @@ const DashboardOverview = () => {
         <div className="xl:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">Recent Applications</h2>
-            <Link to="/student/applications" className="text-[#2563EB] hover:text-[#1d4ed8] text-sm font-bold transition-colors">View All</Link>
+            <Link to="/student/applications" className="text-[#2563EB] dark:text-blue-400 hover:text-[#1d4ed8] dark:hover:text-blue-300 text-sm font-bold transition-colors">View All</Link>
           </div>
 
           <div className="space-y-4">
@@ -143,12 +143,12 @@ const DashboardOverview = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#2563EB] dark:group-hover:text-blue-400 transition-colors">{app.role}</h3>
-                      <p className="text-xs text-slate-500 font-medium">{app.company} • Applied {app.dateApplied}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{app.company} • Applied {app.dateApplied}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <StatusBadge status={app.status} />
-                    <button className="text-slate-400 hover:text-[#2563EB] p-2 transition-colors">
+                    <button className="text-slate-400 hover:text-[#2563EB] dark:hover:text-blue-400 p-2 transition-colors">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                     </button>
                   </div>
@@ -156,8 +156,8 @@ const DashboardOverview = () => {
               ))
             ) : (
               <div className="text-center py-8">
-                <p className="text-slate-500 font-medium text-sm">You haven't applied to any internships yet.</p>
-                <Link to="/student/browse" className="text-[#2563EB] font-bold text-sm mt-2 inline-block hover:underline">Start browsing</Link>
+                <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">You haven't applied to any internships yet.</p>
+                <Link to="/student/browse" className="text-[#2563EB] dark:text-blue-400 font-bold text-sm mt-2 inline-block hover:underline">Start browsing</Link>
               </div>
             )}
           </div>
@@ -167,7 +167,7 @@ const DashboardOverview = () => {
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6 flex flex-col justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Profile Strength</h2>
-            <p className="text-sm text-slate-500 mb-6">A complete profile increases your chances of getting hired by 70%.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">A complete profile increases your chances of getting hired by 70%.</p>
             
             {/* Dynamic Progress Circle */}
             <div className="relative w-32 h-32 mx-auto mb-6">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
@@ -24,8 +24,14 @@ const AdminSidebar = () => {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
 
-  const handleLogout = (e) => {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogoutClick = (e) => {
     e.stopPropagation(); 
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     logout();
     navigate('/login');
   };
@@ -112,7 +118,7 @@ const AdminSidebar = () => {
           </div>
 
           <button 
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
             title="Logout"
             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all shrink-0 z-10"
           >
@@ -124,6 +130,26 @@ const AdminSidebar = () => {
         </div>
       </div>
 
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-800 rounded-[24px] w-full max-w-sm shadow-2xl relative p-6 md:p-8 text-center">
+            <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-5 ring-8 ring-red-50/50 dark:ring-red-500/20">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            </div>
+            <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Log out?</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">Are you sure you want to log out of the admin panel?</p>
+            <div className="flex gap-3 w-full">
+              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-3 rounded-xl text-sm font-bold transition-colors">
+                Cancel
+              </button>
+              <button onClick={confirmLogout} className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-red-500/30">
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       
     </div>

@@ -40,27 +40,27 @@ const ContactUs = ({ title = "Contact Us", subText = "Have questions? Our team i
   };
 
   return (
-    <section className="bg-[#F8FAFC] py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 lg:px-12 relative overflow-hidden flex justify-center">
+    <section className="bg-slate-50/50 dark:bg-slate-900 py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 lg:px-12 relative overflow-hidden flex justify-center transition-colors duration-500">
       <div className="w-full max-w-6xl relative z-10 animate-fade-in-up">
 
         {/* --- Integrated Centered Title Section --- */}
         <div className="flex flex-col items-center justify-center mb-9 sm:mb-10 md:mb-12 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#0f172a] tracking-tight text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#0f172a] dark:text-white tracking-tight text-center transition-colors">
             {title}
           </h2>
           <div className="w-20 h-1.5 bg-gradient-to-r from-[#2563EB] to-teal-400 rounded-full mt-4 sm:mt-5 md:mt-6 mb-4 sm:mb-5 md:mb-6 opacity-90"></div>
           {subText && (
-            <p className="text-[#64748B] max-w-2xl text-[16px] sm:text-lg leading-relaxed px-2">
+            <p className="text-[#64748B] dark:text-slate-400 max-w-2xl text-[16px] sm:text-lg leading-relaxed px-2 transition-colors">
               {subText}
             </p>
           )}
         </div>
 
         {/* --- Unified Contact Card --- */}
-        <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-[0_20px_80px_-15px_rgba(15,23,42,0.08)] overflow-hidden flex flex-col lg:flex-row border border-slate-100 transition-all duration-500 hover:shadow-[0_30px_100px_-15px_rgba(15,23,42,0.12)]">
+        <div className="bg-white dark:bg-slate-800 rounded-[1.5rem] md:rounded-[2rem] shadow-[0_20px_80px_-15px_rgba(15,23,42,0.08)] dark:shadow-[0_20px_80px_-15px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col md:flex-row border border-slate-100 dark:border-slate-700/50 transition-all duration-500 hover:shadow-[0_30px_100px_-15px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_30px_100px_-15px_rgba(0,0,0,0.6)]">
           
           {/* Left Column: Dark Blue Info Panel */}
-          <div className="bg-gradient-to-br from-[#1E40AF] via-[#2563EB] to-[#3B82F6] p-6 sm:p-8 md:p-10 lg:p-12 lg:w-[45%] relative overflow-hidden flex flex-col justify-between group/panel">
+          <div className="bg-gradient-to-br from-[#1E40AF] via-[#2563EB] to-[#3B82F6] p-6 sm:p-8 lg:p-10 md:w-[45%] relative overflow-hidden flex flex-col justify-between group/panel">
             {/* Background Orbs */}
             <div className="absolute top-0 right-0 -translate-y-10 translate-x-10 w-48 sm:w-64 h-48 sm:h-64 bg-white/10 rounded-full blur-3xl pointer-events-none transition-transform duration-1000 group-hover/panel:scale-110"></div>
             <div className="absolute bottom-0 left-0 translate-y-10 -translate-x-10 w-48 sm:w-64 h-48 sm:h-64 bg-teal-400/20 rounded-full blur-3xl pointer-events-none transition-transform duration-1000 group-hover/panel:scale-110"></div>
@@ -96,14 +96,14 @@ const ContactUs = ({ title = "Contact Us", subText = "Have questions? Our team i
           </div>
 
           {/* Right Column: The Form */}
-          <div className="p-6 sm:p-8 md:p-10 lg:p-12 lg:w-[55%] bg-white relative z-10">
-            <h3 className="text-2xl font-bold text-[#0F172A] mb-6 md:mb-8">Send us a message</h3>
+          <div className="p-6 sm:p-8 lg:p-10 md:w-[55%] bg-white dark:bg-slate-800 relative z-10 flex flex-col justify-center">
+            <h3 className="text-xl sm:text-2xl font-bold text-[#0F172A] dark:text-white mb-5 sm:mb-6">Send us a message</h3>
             
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5 md:gap-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 
-                <div className="flex flex-col gap-2 group/input">
-                  <label htmlFor="name" className="text-[13px] font-bold text-slate-600 transition-colors group-focus-within/input:text-[#2563EB]">Full Name</label>
+                <div className="flex flex-col gap-1.5 group/input">
+                  <label htmlFor="name" className="text-[13px] font-bold text-slate-600 dark:text-slate-400 transition-colors group-focus-within/input:text-[#2563EB] dark:group-focus-within/input:text-blue-400">Full Name</label>
                   <input 
                     type="text" 
                     id="name" 
@@ -111,12 +111,12 @@ const ContactUs = ({ title = "Contact Us", subText = "Have questions? Our team i
                     onChange={handleChange}
                     required
                     placeholder="John Doe" 
-                    className="w-full bg-slate-50/50 border border-slate-200 text-[#0F172A] text-[15px] rounded-xl px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#2563EB]/10 focus:border-[#2563EB] transition-all duration-300 placeholder:text-slate-400"
+                    className="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-[#0F172A] dark:text-white text-[14px] rounded-xl px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/50 focus:border-[#2563EB] dark:focus:border-blue-500 transition-all duration-300 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                 </div>
 
-                <div className="flex flex-col gap-2 group/input">
-                  <label htmlFor="email" className="text-[13px] font-bold text-slate-600 transition-colors group-focus-within/input:text-[#2563EB]">Email Address</label>
+                <div className="flex flex-col gap-1.5 group/input">
+                  <label htmlFor="email" className="text-[13px] font-bold text-slate-600 dark:text-slate-400 transition-colors group-focus-within/input:text-[#2563EB] dark:group-focus-within/input:text-blue-400">Email Address</label>
                   <input 
                     type="email" 
                     id="email" 
@@ -124,13 +124,13 @@ const ContactUs = ({ title = "Contact Us", subText = "Have questions? Our team i
                     onChange={handleChange}
                     required
                     placeholder="john@example.com" 
-                    className="w-full bg-slate-50/50 border border-slate-200 text-[#0F172A] text-[15px] rounded-xl px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#2563EB]/10 focus:border-[#2563EB] transition-all duration-300 placeholder:text-slate-400"
+                    className="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-[#0F172A] dark:text-white text-[14px] rounded-xl px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/50 focus:border-[#2563EB] dark:focus:border-blue-500 transition-all duration-300 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 group/input">
-                <label htmlFor="message" className="text-[13px] font-bold text-slate-600 transition-colors group-focus-within/input:text-[#2563EB]">Message</label>
+              <div className="flex flex-col gap-1.5 group/input">
+                <label htmlFor="message" className="text-[13px] font-bold text-slate-600 dark:text-slate-400 transition-colors group-focus-within/input:text-[#2563EB] dark:group-focus-within/input:text-blue-400">Message</label>
                 <textarea 
                   id="message" 
                   rows="3" 
@@ -138,7 +138,7 @@ const ContactUs = ({ title = "Contact Us", subText = "Have questions? Our team i
                   onChange={handleChange}
                   required
                   placeholder="How can our team help you?" 
-                  className="w-full bg-slate-50/50 border border-slate-200 text-[#0F172A] text-[15px] rounded-xl px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#2563EB]/10 focus:border-[#2563EB] transition-all duration-300 placeholder:text-slate-400 resize-none"
+                  className="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-[#0F172A] dark:text-white text-[14px] rounded-xl px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/50 focus:border-[#2563EB] dark:focus:border-blue-500 transition-all duration-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none"
                 ></textarea>
               </div>
 
@@ -146,7 +146,7 @@ const ContactUs = ({ title = "Contact Us", subText = "Have questions? Our team i
                 type="submit" 
                 onMouseEnter={() => setIsHoveringBtn(true)}
                 onMouseLeave={() => setIsHoveringBtn(false)}
-                className="mt-2 w-full sm:w-auto self-end bg-[#2563EB] hover:bg-[#1E40AF] text-white text-[15px] font-bold rounded-xl py-3.5 sm:py-4 px-8 sm:px-10 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_10px_20px_-10px_rgba(37,99,235,0.5)] flex justify-center items-center gap-3 overflow-hidden relative"
+                className="mt-2 w-full sm:w-auto self-end bg-[#2563EB] hover:bg-[#1E40AF] text-white text-[14px] font-bold rounded-xl py-3 px-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_10px_20px_-10px_rgba(37,99,235,0.5)] flex justify-center items-center gap-2 overflow-hidden relative"
               >
                 <span className="relative z-10">Send Message</span>
                 <svg 

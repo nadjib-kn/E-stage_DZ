@@ -10,7 +10,7 @@ const Hero = () => {
     <section className="relative w-full flex-1 flex items-center bg-white dark:bg-slate-900 overflow-hidden mt-[10px] transition-colors duration-300">
       
       {/* INNER CONTAINER */}
-      <div className="w-full max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 py-12 flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20 z-10">
+      <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-16 py-12 flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20 z-10">
         
         {/* LEFT COLUMN: Text Content */}
         <div className="flex-1 flex flex-col items-start w-full max-w-2xl">

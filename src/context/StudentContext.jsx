@@ -1,20 +1,13 @@
 // src/context/StudentContext.jsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useAuth } from './AuthContext';
-import { readDB, writeDB } from '../utils/storageHelper';
+import { useDatabase } from './DatabaseContext';
 
 const StudentContext = createContext();
 
 export const StudentProvider = ({ children }) => {
   const { currentUser } = useAuth();
-  
-  // Initialize state from Local Storage
-  const [db, setDb] = useState(readDB());
-
-  // Keep state in sync with local storage whenever db changes
-  useEffect(() => {
-    writeDB(db);
-  }, [db]);
+  const { db, updateDb } = useDatabase();
 
   const applyForJob = (jobId) => {
     if (!currentUser) return { success: false, message: "Not logged in" };
@@ -35,33 +28,41 @@ export const StudentProvider = ({ children }) => {
       dateApplied: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
     };
 
-    setDb(prev => ({ ...prev, applications: [...prev.applications, newApplication] }));
+    updateDb(prev => ({ ...prev, applications: [...prev.applications, newApplication] }));
     return { success: true, message: "Application submitted successfully!" };
   };
 
+  // FIX: Use functional updater to avoid stale closure bug.
+  // Previously, the filter was computed outside setDb, capturing a stale `db`.
   const cancelApplication = (jobId) => {
     if (!currentUser) return { success: false, message: "Not logged in" };
 
-    const updatedApplications = db.applications.filter(
-      (app) => !(app.jobId === jobId && app.studentId === currentUser.id)
-    );
-
-    setDb(prev => ({ ...prev, applications: updatedApplications }));
+    updateDb(prev => ({
+      ...prev,
+      applications: prev.applications.filter(
+        (app) => !(app.jobId === jobId && app.studentId === currentUser.id)
+      )
+    }));
     return { success: true, message: "Application cancelled successfully." };
   };
 
-  const getJobsWithStatus = () => {
-    if (!currentUser) return db.jobs;
+  // FIX: Wrapped in useMemo to prevent recalculation on every render.
+  // FIX: Only show Active jobs to students (was showing Draft/Closed/Blocked).
+  const jobs = useMemo(() => {
+    if (!currentUser) return db.jobs.filter(job => job.status === 'Active');
 
-    return db.jobs.map(job => {
-      const hasApplied = db.applications.some(
-        app => app.jobId === job.id && app.studentId === currentUser.id
-      );
-      return { ...job, hasApplied };
-    });
-  };
+    return db.jobs
+      .filter(job => job.status === 'Active')
+      .map(job => {
+        const hasApplied = db.applications.some(
+          app => app.jobId === job.id && app.studentId === currentUser.id
+        );
+        return { ...job, hasApplied };
+      });
+  }, [db.jobs, db.applications, currentUser]);
 
-  const getMyApplications = () => {
+  // FIX: Wrapped in useMemo to prevent recalculation on every render.
+  const myApplications = useMemo(() => {
     if (!currentUser) return [];
 
     const myApps = db.applications.filter(app => app.studentId === currentUser.id);
@@ -70,14 +71,14 @@ export const StudentProvider = ({ children }) => {
       const jobDetails = db.jobs.find(job => job.id === app.jobId);
       return { ...jobDetails, ...app }; 
     });
-  };
+  }, [db.applications, db.jobs, currentUser]);
   
   return (
     <StudentContext.Provider value={{ 
-      jobs: getJobsWithStatus(), 
+      jobs, 
       applyForJob, 
       cancelApplication, 
-      myApplications: getMyApplications() 
+      myApplications 
     }}>
       {children}
     </StudentContext.Provider>

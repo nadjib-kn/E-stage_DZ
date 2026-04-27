@@ -1,11 +1,10 @@
 // src/components/dashboards/admin/AdminManageJobs.jsx
 import React, { useState } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
-import { mockDatabase } from '../../../data/mockData'; // Fallback import
 
 const AdminManageJobs = () => {
-  // Added blockJob from context (we will add this to Context in Step 2)
-  const { allJobs, deleteJob, blockJob } = useAdmin(); 
+  // FIX: Added allApplications from context instead of importing mockDatabase directly
+  const { allJobs, allApplications, deleteJob, blockJob } = useAdmin(); 
   
   const [filter, setFilter] = useState('all'); // 'all', 'active', 'closed', 'draft', 'blocked'
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,12 +12,12 @@ const AdminManageJobs = () => {
   // New state for our custom action modal
   const [actionModal, setActionModal] = useState({ isOpen: false, job: null });
 
-  // Use jobs from context or fallback directly to mockData.js structure
-  const jobsList = allJobs?.length > 0 ? allJobs : mockDatabase.jobs;
+  // FIX: Use allJobs from context directly, no fallback to raw mockDatabase
+  const jobsList = allJobs;
   
-  // Calculate applicants for each job based on the applications array
+  // FIX: Calculate applicants from context's allApplications, not from static mockDatabase
   const getApplicantCount = (jobId) => {
-    return mockDatabase?.applications?.filter(app => app.jobId === jobId).length || 0;
+    return allApplications?.filter(app => app.jobId === jobId).length || 0;
   };
 
   // Filter logic

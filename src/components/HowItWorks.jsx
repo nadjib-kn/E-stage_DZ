@@ -1,84 +1,132 @@
 import React from 'react';
 
-const data = {
+/* ─────────────────────────────────────────────────────────────
+   All dark-mode styles use inline objects — Tailwind purging
+   cannot strip these, so gradients are guaranteed to render.
+   Color palette: strictly slate + blue (#2563EB / sky-400).
+───────────────────────────────────────────────────────────── */
+const darkStyles = {
   students: {
-    title: "For Students",
-    cardBg: "bg-white dark:bg-slate-800",
-    cardShadow: "shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)] border border-gray-100 dark:border-slate-700",
-    tagBg: "bg-[#2563EB]", // Bright blue
-    textColorTitle: "text-[#0F172A] dark:text-white",
-    textColorDesc: "text-[#64748B] dark:text-slate-400",
-    stepBg: "bg-[#EFF6FF] dark:bg-blue-500/10", // Soft pastel blue background
-    stepTextColor: "text-[#2563EB] dark:text-blue-400", // Primary blue text
-    lineColor: "bg-gray-100 dark:bg-slate-700",
-    steps: [
-      {
-        number: 1,
-        title: "Create your digital CV",
-        description: "Build a professional profile that highlights your academic success and skills."
-      },
-      {
-        number: 2,
-        title: "Browse verified internships",
-        description: "Access exclusive offers from top-tier Algerian companies across all sectors."
-      },
-      {
-        number: 3,
-        title: "Apply and track status",
-        description: "Submit applications instantly and get real-time feedback on your progress."
-      }
-    ]
+    card: {
+      background: 'linear-gradient(145deg, #0f172a 0%, #1a2744 50%, #0f172a 100%)',
+      border: '1px solid rgba(37,99,235,0.14)',
+      boxShadow: '0 1px 0 0 rgba(37,99,235,0.12) inset, 0 24px 64px rgba(0,0,0,0.55)',
+    },
+    stepCircle: {
+      background: 'rgba(37,99,235,0.14)',
+      border: '1px solid rgba(37,99,235,0.28)',
+    },
+    line: {
+      background: 'linear-gradient(to bottom, rgba(37,99,235,0.40), transparent)',
+    },
+    glowTL: 'radial-gradient(ellipse at 0% 0%, rgba(37,99,235,0.13) 0%, transparent 55%)',
+    glowBR: 'radial-gradient(ellipse at 100% 100%, rgba(56,189,248,0.06) 0%, transparent 50%)',
   },
   companies: {
-    title: "For Companies",
-    cardBg: "bg-[#0F172A] dark:bg-slate-800", // Deep Navy
-    cardShadow: "shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] border border-slate-800 dark:border-slate-600", 
-    tagBg: "bg-[#2563EB]", // Slightly lighter blue for dark mode contrast
-    textColorTitle: "text-white",
-    textColorDesc: "text-[#94A3B8]", // Slate gray
-    stepBg: "bg-[#1E293B] dark:bg-slate-700", // Subtle dark blue background for the circle
-    stepTextColor: "text-[#2563EB] dark:text-blue-400", // Bright blue text
-    lineColor: "bg-slate-700/50",
-    steps: [
-      {
-        number: 1,
-        title: "Register enterprise",
-        description: "Create your business profile and verify your institution's credentials easily."
-      },
-      {
-        number: 2,
-        title: "Post internship offers",
-        description: "Reach thousands of top-performing students from universities across Algeria."
-      },
-      {
-        number: 3,
-        title: "Filter and accept talent",
-        description: "Use our smart screening tools to find the perfect match for your team's needs."
-      }
-    ]
-  }
+    card: {
+      background: 'linear-gradient(145deg, #060d1f 0%, #0d1a38 50%, #060d1f 100%)',
+      border: '1px solid rgba(37,99,235,0.10)',
+      boxShadow: '0 1px 0 0 rgba(56,189,248,0.06) inset, 0 24px 64px rgba(0,0,0,0.70)',
+    },
+    stepCircle: {
+      background: 'rgba(14,165,233,0.10)',
+      border: '1px solid rgba(14,165,233,0.22)',
+    },
+    line: {
+      background: 'linear-gradient(to bottom, rgba(14,165,233,0.35), transparent)',
+    },
+    glowTL: 'radial-gradient(ellipse at 0% 0%, rgba(14,165,233,0.10) 0%, transparent 55%)',
+    glowBR: 'radial-gradient(ellipse at 100% 100%, rgba(37,99,235,0.08) 0%, transparent 50%)',
+  },
 };
 
-const HowItWorksStep = ({ step, textColorTitle, textColorDesc, stepBg, stepTextColor, lineColor, isLast }) => {
+const cards = {
+  students: {
+    title: 'For Students',
+    variant: 'students',
+    // ── light mode ──
+    cardBg: 'bg-white',
+    cardBorder: 'border border-slate-100',
+    cardShadow: 'shadow-[0_8px_30px_rgb(0,0,0,0.06)]',
+    tagBg: 'bg-[#2563EB]',
+    titleColor: 'text-[#0F172A] dark:text-white',
+    descColor: 'text-[#64748B] dark:text-slate-400',
+    stepBgLight: 'bg-[#EFF6FF]',
+    stepTextLight: 'text-[#2563EB]',
+    stepTextDark: 'text-blue-400',
+    lineLight: 'bg-slate-100',
+    steps: [
+      { number: 1, title: 'Create your digital CV',        description: 'Build a professional profile that highlights your academic success and skills.' },
+      { number: 2, title: 'Browse verified internships',   description: 'Access exclusive offers from top-tier Algerian companies across all sectors.' },
+      { number: 3, title: 'Apply and track status',        description: 'Submit applications instantly and get real-time feedback on your progress.' },
+    ],
+  },
+  companies: {
+    title: 'For Companies',
+    variant: 'companies',
+    // ── light mode (dark navy card) ──
+    cardBg: 'bg-slate-900',
+    cardBorder: 'border border-slate-800',
+    cardShadow: 'shadow-[0_20px_50px_-15px_rgba(0,0,0,0.4)]',
+    tagBg: 'bg-[#2563EB]',
+    titleColor: 'text-white',
+    descColor: 'text-slate-400',
+    stepBgLight: 'bg-[#1E293B]',
+    stepTextLight: 'text-blue-400',
+    stepTextDark: 'text-sky-400',
+    lineLight: 'bg-slate-700/50',
+    steps: [
+      { number: 1, title: 'Register enterprise',           description: 'Create your business profile and verify your institution\'s credentials easily.' },
+      { number: 2, title: 'Post internship offers',        description: 'Reach thousands of top-performing students from universities across Algeria.' },
+      { number: 3, title: 'Filter and accept talent',      description: 'Use our smart screening tools to find the perfect match for your team\'s needs.' },
+    ],
+  },
+};
+
+/* Watches <html class="dark"> so components re-render on theme toggle */
+function useDark() {
+  const [dark, setDark] = React.useState(
+    () => typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
+  );
+  React.useEffect(() => {
+    const obs = new MutationObserver(() =>
+      setDark(document.documentElement.classList.contains('dark'))
+    );
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, []);
+  return dark;
+}
+
+/* ── Single step row ── */
+const Step = ({ step, card, isLast, isDark }) => {
+  const ds = darkStyles[card.variant];
   return (
     <div className="relative flex gap-4 sm:gap-6 items-start mb-8 sm:mb-10 last:mb-0 group cursor-default">
-      
-      {/* Timeline Vertical Line - Resizes left/top alignment based on circle size */}
+
+      {/* Connector line */}
       {!isLast && (
-        <div className={`absolute left-5 sm:left-6 top-10 sm:top-14 w-[2px] h-[calc(100%+0.5rem)] sm:h-[calc(100%+0.5rem)] -ml-[1px] transition-colors duration-300 ${lineColor} group-hover:bg-[#2563EB]/40`}></div>
+        <div
+          className={`absolute left-5 sm:left-6 top-10 sm:top-14 w-[2px] h-[calc(100%+0.5rem)] -ml-[1px] ${!isDark ? card.lineLight : ''}`}
+          style={isDark ? ds.line : {}}
+        />
       )}
 
-      {/* Step Number Circle - Scales down on mobile */}
-      <div className={`relative z-10 flex items-center justify-center shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${stepBg} ${stepTextColor} transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>
+      {/* Number circle */}
+      <div
+        className={`relative z-10 flex items-center justify-center shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl transition-all duration-300 group-hover:scale-110
+          ${!isDark ? `${card.stepBgLight} ${card.stepTextLight}` : card.stepTextDark}`}
+        style={isDark ? ds.stepCircle : {}}
+      >
         {step.number}
       </div>
-      
-      {/* Step Text Content */}
+
+      {/* Text */}
       <div className="pt-0.5 sm:pt-1 transition-transform duration-300 group-hover:translate-x-1">
-        <h4 className={`text-[17px] sm:text-[19px] md:text-[20px] font-bold mb-1.5 sm:mb-2 ${textColorTitle}`}>
+        <h4 className={`text-[17px] sm:text-[19px] font-bold mb-1.5 ${card.titleColor}`}>
           {step.title}
         </h4>
-        <p className={`text-[14px] sm:text-[15px] md:text-base leading-relaxed ${textColorDesc}`}>
+        <p className={`text-[14px] sm:text-[15px] leading-relaxed ${card.descColor}`}>
           {step.description}
         </p>
       </div>
@@ -86,46 +134,82 @@ const HowItWorksStep = ({ step, textColorTitle, textColorDesc, stepBg, stepTextC
   );
 };
 
-const HowItWorksCard = ({ cardData }) => {
+/* ── Card ── */
+const Card = ({ card, isDark }) => {
+  const ds = darkStyles[card.variant];
   return (
-    <div className={`relative flex-1 rounded-[1.5rem] sm:rounded-[2rem] p-6 pt-12 sm:p-10 sm:pt-14 lg:p-12 lg:pt-16 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${cardData.cardBg} ${cardData.cardShadow}`}>
-      
-      {/* Top Overlapping Badge - Scales padding, text, and position based on viewport */}
-      <div className={`absolute top-[-16px] sm:top-[-18px] left-6 sm:left-8 lg:left-10 rounded-lg sm:rounded-xl px-5 sm:px-6 py-2 sm:py-2.5 ${cardData.tagBg} text-white font-semibold text-xs sm:text-sm shadow-lg tracking-wide uppercase transition-transform duration-300 hover:scale-105`}>
-        {cardData.title}
+    <div
+      className={`relative flex-1 rounded-[1.75rem] sm:rounded-[2rem] p-6 pt-12 sm:p-10 sm:pt-14 lg:p-12 lg:pt-16 transition-all duration-500 hover:-translate-y-2
+        ${!isDark ? `${card.cardBg} ${card.cardBorder} ${card.cardShadow}` : ''}`}
+      style={isDark ? ds.card : {}}
+    >
+      {/* Dark mode corner glows */}
+      {isDark && (
+        <>
+          <div className="absolute inset-0 rounded-[1.75rem] sm:rounded-[2rem] pointer-events-none"
+               style={{ background: ds.glowTL }} />
+          <div className="absolute inset-0 rounded-[1.75rem] sm:rounded-[2rem] pointer-events-none"
+               style={{ background: ds.glowBR }} />
+        </>
+      )}
+
+      {/* Badge */}
+      <div
+        className={`absolute top-[-16px] sm:top-[-18px] left-6 sm:left-8 lg:left-10 rounded-xl px-5 sm:px-6 py-2 sm:py-2.5 ${card.tagBg} text-white font-semibold text-xs sm:text-sm tracking-widest uppercase`}
+        style={{ boxShadow: '0 4px 16px rgba(37,99,235,0.40)' }}
+      >
+        {card.title}
       </div>
 
-      {/* Steps List */}
+      {/* Steps */}
       <div className="relative z-10 mt-2">
-        {cardData.steps.map((step, index) => (
-          <HowItWorksStep 
-            key={step.number} 
-            step={step} 
-            textColorTitle={cardData.textColorTitle}
-            textColorDesc={cardData.textColorDesc}
-            stepBg={cardData.stepBg}
-            stepTextColor={cardData.stepTextColor}
-            lineColor={cardData.lineColor}
-            isLast={index === cardData.steps.length - 1}
+        {card.steps.map((step, i) => (
+          <Step
+            key={step.number}
+            step={step}
+            card={card}
+            isLast={i === card.steps.length - 1}
+            isDark={isDark}
           />
         ))}
       </div>
-      
     </div>
   );
 };
 
+/* ── Section ── */
 const HowItWorks = () => {
-  return (
-    <section className="bg-[#F8FAFC] dark:bg-slate-900 pt-12 pb-16 sm:pt-16 sm:pb-24 px-4 sm:px-6 md:px-12 lg:px-16 overflow-hidden transition-colors duration-300">
-      <div className="max-w-7xl mx-auto flex flex-col gap-16">
+  const isDark = useDark();
 
-        {/* Cards Container - Stacks on mobile/tablet, side-by-side on desktop */}
+  return (
+    <section
+      className="relative pt-12 pb-16 sm:pt-16 sm:pb-24 px-4 sm:px-6 md:px-12 lg:px-16 overflow-hidden transition-colors duration-300"
+      style={{
+        background: isDark
+          ? 'linear-gradient(180deg, #060d1f 0%, #0a1628 100%)'
+          : '#F8FAFC',
+      }}
+    >
+      {/* Dark mode: two soft blue ambient glows, no violet */}
+      {isDark && (
+        <>
+          <div className="absolute pointer-events-none" style={{
+            width: 700, height: 700, top: '-15%', left: '-8%',
+            background: 'radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 65%)',
+            filter: 'blur(0px)',
+          }} />
+          <div className="absolute pointer-events-none" style={{
+            width: 500, height: 500, bottom: '-10%', right: '-4%',
+            background: 'radial-gradient(circle, rgba(14,165,233,0.07) 0%, transparent 65%)',
+          }} />
+        </>
+      )}
+
+      <div className="max-w-[1600px] mx-auto relative">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-8 xl:gap-12">
-          <HowItWorksCard cardData={data.students} />
-          <HowItWorksCard cardData={data.companies} />
+          <Card card={cards.students}  isDark={isDark} />
+          <Card card={cards.companies} isDark={isDark} />
         </div>
-        
       </div>
     </section>
   );

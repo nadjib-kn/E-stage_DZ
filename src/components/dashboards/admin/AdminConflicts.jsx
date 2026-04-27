@@ -2,20 +2,26 @@ import React, { useState } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
 
 const AdminConflicts = () => {
-  // Use context if available, otherwise fallback to our mock data array
-  const { allTickets, resolveTicket } = useAdmin();
+  // FIX: Use context directly, removed hardcoded fallback data
+  const { allTickets, allUsers, resolveTicket } = useAdmin();
   
   const [filter, setFilter] = useState('open'); // 'all', 'open', 'resolved'
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fallback data reflecting the tickets in your mockData.js
-  const defaultTickets = [
-    { id: "ticket_001", type: "conflict", status: "open", dateOpened: "Apr 05, 2026", reporterId: "student_123", reportedPartyId: "comp_djezzy", subject: "Company not responding after acceptance", description: "I was accepted for the UI/UX internship 3 weeks ago, but the HR department is ignoring my emails regarding the internship convention." },
-    { id: "ticket_003", type: "conflict", status: "open", dateOpened: "Apr 07, 2026", reporterId: "std_002", reportedPartyId: "comp_scam", subject: "Suspicious Interview Request", description: "This company asked me to pay a 'training fee' of 5000 DZD before starting the internship. Is this normal?" },
-    { id: "ticket_002", type: "support", status: "resolved", dateOpened: "Mar 28, 2026", reporterId: "comp_yassir", reportedPartyId: null, subject: "Cannot update company logo", description: "I am trying to upload a new PNG logo but the platform keeps throwing a 500 error." }
-  ];
+  // FIX 4.4: Custom confirmation modal state instead of window.confirm
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, ticketId: null });
 
-  const ticketsList = allTickets?.length > 0 ? allTickets : defaultTickets;
+  // FIX 4.5: Use context data directly, no fallback array
+  const ticketsList = allTickets;
+
+  // FIX 4.3: Resolve raw IDs to human-readable names
+  const resolveUserName = (userId) => {
+    if (!userId) return 'N/A';
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return userId;
+    if (user.role === 'company') return user.companyName || user.company || userId;
+    return user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.name || userId);
+  };
 
   // Filter based on status and search query
   const filteredTickets = ticketsList.filter(ticket => {
@@ -25,15 +31,54 @@ const AdminConflicts = () => {
     return matchesFilter && matchesSearch;
   });
 
+  // FIX 4.4: Open confirmation modal instead of window.confirm
   const handleResolve = (id) => {
-    if (window.confirm("Mark this ticket as resolved?")) {
-      if (resolveTicket) resolveTicket(id);
-      else console.log(`Resolved ticket ${id}`);
+    setConfirmModal({ isOpen: true, ticketId: id });
+  };
+
+  const confirmResolve = () => {
+    if (resolveTicket && confirmModal.ticketId) {
+      resolveTicket(confirmModal.ticketId);
     }
+    setConfirmModal({ isOpen: false, ticketId: null });
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 font-sans pb-8">
+    <div className="max-w-7xl mx-auto space-y-8 font-sans pb-8 relative">
+
+      {/* ================= CONFIRMATION MODAL (replaces window.confirm) ================= */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+              Resolve Ticket?
+            </h3>
+            
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 leading-relaxed">
+              Are you sure you want to mark this ticket as resolved? This action indicates the issue has been addressed.
+            </p>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setConfirmModal({ isOpen: false, ticketId: null })}
+                className="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmResolve}
+                className="flex-1 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm"
+              >
+                Yes, Resolve
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* ================= HEADER & SEARCH ================= */}
       <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-colors duration-300">
@@ -122,17 +167,18 @@ const AdminConflicts = () => {
                     "{ticket.description}"
                   </p>
                   
+                  {/* FIX 4.3: Resolved IDs to human-readable names */}
                   <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1.5">
                       <svg className="w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                      <span>Reporter: <strong className="text-slate-700 dark:text-slate-300">{ticket.reporterId}</strong></span>
+                      <span>Reporter: <strong className="text-slate-700 dark:text-slate-300">{resolveUserName(ticket.reporterId)}</strong></span>
                     </div>
                     {ticket.reportedPartyId && (
                       <>
                         <span className="text-slate-300 dark:text-slate-600">|</span>
                         <div className="flex items-center gap-1.5">
                           <svg className="w-4 h-4 text-red-400 dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                          <span>Reported: <strong className="text-slate-700 dark:text-slate-300">{ticket.reportedPartyId}</strong></span>
+                          <span>Reported: <strong className="text-slate-700 dark:text-slate-300">{resolveUserName(ticket.reportedPartyId)}</strong></span>
                         </div>
                       </>
                     )}

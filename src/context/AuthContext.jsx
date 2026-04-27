@@ -89,10 +89,21 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('eStageUser');
   };
 
+  // FIX: updateUser now also persists changes to the main database,
+  // not just to eStageUser in localStorage. This ensures Admin sees 
+  // updated profiles and data doesn't vanish on context re-read.
   const updateUser = (updatedInfo) => {
     const updatedUser = { ...currentUser, ...updatedInfo };
     setCurrentUser(updatedUser);
-    localStorage.setItem('eStageUser', JSON.stringify(updatedUser)); 
+    localStorage.setItem('eStageUser', JSON.stringify(updatedUser));
+
+    // Also update the user record in the main database
+    const db = readDB();
+    db.users = db.users.map(u =>
+      u.id === updatedUser.id ? { ...u, ...updatedInfo } : u
+    );
+    writeDB(db);
+
     return { success: true };
   };
 

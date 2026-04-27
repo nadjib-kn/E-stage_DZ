@@ -53,7 +53,13 @@ const MyProfile = () => {
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (file) setFormData({ ...formData, avatar: URL.createObjectURL(file) });
+    if (file) {
+      // FIX: Revoke the old blob URL to prevent memory leak
+      if (formData.avatar && formData.avatar.startsWith('blob:')) {
+        URL.revokeObjectURL(formData.avatar);
+      }
+      setFormData({ ...formData, avatar: URL.createObjectURL(file) });
+    }
   };
 
   const triggerFileInput = () => {
@@ -63,6 +69,10 @@ const MyProfile = () => {
   const handlePdfUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // FIX: Revoke the old blob URL to prevent memory leak
+      if (formData.resumeUrl && formData.resumeUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(formData.resumeUrl);
+      }
       setFormData({ 
         ...formData, 
         resumeName: file.name,

@@ -11,14 +11,8 @@ const AdminCompanyValidation = () => {
   const [toastMessage, setToastMessage] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, action: '', company: null });
 
-  // Fallback data
-  const defaultCompanies = [
-    { id: "comp_techminds", companyName: "TechMinds Solutions", email: "contact@techminds.dz", verificationStatus: "pending", industry: "Software Development", logo: "T" },
-    { id: "comp_yassir", companyName: "Yassir", email: "hr@yassir.dz", verificationStatus: "approved", industry: "Technology", logo: "Y" },
-    { id: "comp_scam", companyName: "CryptoDZ Investment", email: "fake@crypto-dz.com", verificationStatus: "rejected", industry: "Finance", logo: "C" }
-  ];
-
-  const companies = allUsers?.filter(u => u.role === 'company') || defaultCompanies;
+  // FIX: Use context data directly, no hardcoded fallback
+  const companies = allUsers?.filter(u => u.role === 'company') || [];
 
   const filteredCompanies = companies.filter(company => {
     const matchesFilter = company.verificationStatus === filter;
