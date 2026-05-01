@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
+import apiClient from '../../../api/apiClient';
 
 const CompanyProfile = () => {
   // Pull our user data and the updateUser function from context
@@ -14,15 +15,24 @@ const CompanyProfile = () => {
 
   // Local state to hold the form data, defaulting to current user data
   const [formData, setFormData] = useState({
-    companyName: currentUser?.companyName || 'TechCorp DZ',
-    industry: currentUser?.industry || 'Software Development',
-    website: currentUser?.website || 'https://www.techcorp.dz',
-    location: currentUser?.location || 'Algiers, Bab Ezzouar',
-    size: currentUser?.size || '10-50',
-    email: currentUser?.email || 'hr@techcorp.dz',
+    companyName: currentUser?.companyName || '',
+    industry: currentUser?.industry || '',
+    website: currentUser?.website || '',
+    location: currentUser?.location || '',
+    size: currentUser?.size || '',
+    email: currentUser?.email || '',
     about: currentUser?.about || '',
     avatar: currentUser?.avatar || "https://api.dicebear.com/7.x/identicon/svg?seed=TechCorp&backgroundColor=ffffff"
   });
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData(prev => ({
+        ...prev,
+        ...currentUser
+      }));
+    }
+  }, [currentUser]);
 
   // Handle standard text inputs
   const handleChange = (e) => {
@@ -34,10 +44,9 @@ const CompanyProfile = () => {
   };
 
   // Handle the profile photo upload
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      // FIX: Revoke the old blob URL to prevent memory leak
       if (formData.avatar && formData.avatar.startsWith('blob:')) {
         URL.revokeObjectURL(formData.avatar);
       }
@@ -46,6 +55,18 @@ const CompanyProfile = () => {
         ...prev,
         avatar: imageUrl
       }));
+      
+      try {
+        const form = new FormData();
+        form.append('avatar', file);
+        const { data } = await apiClient.post('/api/users/me/avatar', form, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setFormData(prev => ({ ...prev, avatar: data.data.avatarUrl }));
+        updateUser({ avatar: data.data.avatarUrl });
+      } catch (error) {
+        console.error('Avatar upload failed:', error);
+      }
     }
   };
 
@@ -55,23 +76,18 @@ const CompanyProfile = () => {
   };
 
   // Handle Save
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (updateUser) {
-      updateUser({
-        companyName: formData.companyName,
-        industry: formData.industry,
-        website: formData.website,
-        location: formData.location,
-        size: formData.size,
-        email: formData.email,
-        about: formData.about,
-        avatar: formData.avatar,
-      });
+    try {
+      const { avatar, ...textFields } = formData;
+      const { data } = await apiClient.put('/api/users/me', textFields);
+      updateUser(data.data.user); // sync full user object from backend into localStorage
       
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
+    } catch (error) {
+      console.error('Failed to save company profile:', error);
     }
   };
 

@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
+import apiClient from '../../../api/apiClient';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const MyProfile = () => {
   const { currentUser, updateUser } = useAuth();
@@ -8,6 +11,15 @@ const MyProfile = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [isPreview, setIsPreview] = useState(false); 
   const [newSkill, setNewSkill] = useState('');
+
+  // Helper to ensure skills is ALWAYS an array (even if cached as a string)
+  const parseSkills = (skills) => {
+    if (Array.isArray(skills)) return skills;
+    if (typeof skills === 'string') {
+      try { return JSON.parse(skills); } catch (e) { return []; }
+    }
+    return [];
+  };
 
   // Form State
   const [formData, setFormData] = useState({
@@ -19,7 +31,7 @@ const MyProfile = () => {
     university: currentUser?.university || '',
     major: currentUser?.major || '',
     graduationYear: currentUser?.graduationYear || '',
-    skills: currentUser?.skills || [],
+    skills: parseSkills(currentUser?.skills),
     avatar: currentUser?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Default&backgroundColor=e2e8f0",
     resumeUrl: currentUser?.resumeUrl || '',
     resumeName: currentUser?.resumeName || (currentUser?.resumeUrl ? 'My_Resume.pdf' : ''),
@@ -34,7 +46,7 @@ const MyProfile = () => {
       setFormData(prev => ({
         ...prev,
         ...currentUser,
-        skills: currentUser.skills || prev.skills,
+        skills: parseSkills(currentUser.skills) || prev.skills,
         resumeName: currentUser.resumeName || prev.resumeName
       }));
     }
@@ -42,23 +54,35 @@ const MyProfile = () => {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (updateUser) {
-      updateUser(formData); 
+    try {
+      const { avatar, resumeUrl, resumeName, ...textFields } = formData;
+      const { data } = await apiClient.put('/api/users/me', textFields);
+      updateUser(data.data.user); // sync full user object from backend into localStorage
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
+    } catch (error) {
+      console.error('Failed to save profile:', error);
     }
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // FIX: Revoke the old blob URL to prevent memory leak
-      if (formData.avatar && formData.avatar.startsWith('blob:')) {
-        URL.revokeObjectURL(formData.avatar);
-      }
-      setFormData({ ...formData, avatar: URL.createObjectURL(file) });
+    if (!file) return;
+    // Show instant preview while upload is in-flight
+    const previewUrl = URL.createObjectURL(file);
+    setFormData(prev => ({ ...prev, avatar: previewUrl }));
+    try {
+      const form = new FormData();
+      form.append('avatar', file);
+      const { data } = await apiClient.post('/api/users/me/avatar', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setFormData(prev => ({ ...prev, avatar: data.data.avatarUrl }));
+      updateUser({ avatar: data.data.avatarUrl });
+    } catch (error) {
+      console.error('Avatar upload failed:', error);
     }
   };
 
@@ -66,18 +90,22 @@ const MyProfile = () => {
     fileInputRef.current.click();
   };
 
-  const handlePdfUpload = (e) => {
+  const handlePdfUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // FIX: Revoke the old blob URL to prevent memory leak
-      if (formData.resumeUrl && formData.resumeUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(formData.resumeUrl);
-      }
-      setFormData({ 
-        ...formData, 
-        resumeName: file.name,
-        resumeUrl: URL.createObjectURL(file) 
+    if (!file) return;
+    // Show instant filename feedback while upload is in-flight
+    setFormData(prev => ({ ...prev, resumeName: file.name, resumeUrl: URL.createObjectURL(file) }));
+    try {
+      const form = new FormData();
+      form.append('resume', file);
+      const { data } = await apiClient.post('/api/users/me/resume', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
+      // Use server-returned values (cloud URL + sanitized filename)
+      setFormData(prev => ({ ...prev, resumeUrl: data.data.resumeUrl, resumeName: data.data.resumeName }));
+      updateUser({ resumeUrl: data.data.resumeUrl, resumeName: data.data.resumeName });
+    } catch (error) {
+      console.error('Resume upload failed:', error);
     }
   };
 
@@ -129,7 +157,7 @@ const MyProfile = () => {
           <div className="px-8 pb-8">
             <div className="-mt-12 flex justify-between items-end mb-6">
               <div className="w-24 h-24 bg-white dark:bg-slate-800 p-1 rounded-full shadow-md border border-slate-100 dark:border-slate-700 shrink-0">
-                <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                <img src={formData.avatar?.startsWith('http') || formData.avatar?.startsWith('blob') || formData.avatar?.startsWith('data:') ? formData.avatar : `${API_URL}${formData.avatar}`} alt="Profile" className="w-full h-full object-cover rounded-full" />
               </div>
               <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-[#2563EB] dark:text-blue-400 text-xs font-bold uppercase tracking-wider rounded-lg border border-blue-100 dark:border-blue-500/20">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
@@ -223,7 +251,7 @@ const MyProfile = () => {
                 <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">Attached Document</h3>
                 {formData.resumeUrl ? (
                   <a 
-                    href={formData.resumeUrl} 
+                    href={formData.resumeUrl?.startsWith('http') || formData.resumeUrl?.startsWith('blob') || formData.resumeUrl?.startsWith('data:') ? formData.resumeUrl : `${API_URL}${formData.resumeUrl}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="border border-slate-200 dark:border-slate-600 rounded-2xl p-4 bg-slate-50 dark:bg-slate-700/50 flex items-center justify-between group hover:border-[#2563EB]/40 dark:hover:border-blue-500/40 hover:bg-blue-50/30 dark:hover:bg-blue-500/10 transition-all cursor-pointer block"
@@ -299,7 +327,7 @@ const MyProfile = () => {
             onClick={triggerFileInput}
             className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-50 dark:border-slate-800 relative group cursor-pointer overflow-hidden shadow-sm"
           >
-            <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover" />
+            <img src={formData.avatar?.startsWith('http') || formData.avatar?.startsWith('blob') || formData.avatar?.startsWith('data:') ? formData.avatar : `${API_URL}${formData.avatar}`} alt="Profile" className="w-full h-full object-cover" />
             
             <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>

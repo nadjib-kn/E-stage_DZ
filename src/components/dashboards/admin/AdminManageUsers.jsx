@@ -1,6 +1,6 @@
-// src/pages/admin/AdminManageUsers.jsx
 import React, { useState } from 'react';
 import { useAdmin } from "../../../context/AdminContext";
+import AdminProfilePreviewModal from './AdminProfilePreviewModal';
 
 const AdminManageUsers = () => {
   // Added suspendUser from context
@@ -10,6 +10,8 @@ const AdminManageUsers = () => {
   
   // New state for our custom action modal
   const [actionModal, setActionModal] = useState({ isOpen: false, user: null });
+  // State for profile preview modal
+  const [previewUser, setPreviewUser] = useState(null);
 
   // Filter users based on search query and selected tab
   const filteredUsers = allUsers.filter(user => {
@@ -164,20 +166,35 @@ const AdminManageUsers = () => {
                     {/* Actions Column */}
                     <td className="p-5 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          className="p-2 text-slate-400 hover:text-[#2563EB] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
-                          title="View Profile"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                        </button>
-                        {/* Changed this button to open the modal instead of window.confirm */}
-                        <button 
-                          onClick={() => openModal(user)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                          title="Manage Account State"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
+                        
+                        <div className="relative group/eye">
+                          <button 
+                            onClick={() => setPreviewUser(user)}
+                            className="p-2 text-slate-400 hover:text-[#2563EB] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                          </button>
+                          {/* Custom Tooltip */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white text-[11px] font-bold rounded-lg shadow-lg opacity-0 translate-y-2 group-hover/eye:opacity-100 group-hover/eye:translate-y-0 transition-all pointer-events-none whitespace-nowrap z-10">
+                            View Profile
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+                          </div>
+                        </div>
+
+                        <div className="relative group/trash">
+                          <button 
+                            onClick={() => openModal(user)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                          {/* Custom Tooltip */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow-lg opacity-0 translate-y-2 group-hover/trash:opacity-100 group-hover/trash:translate-y-0 transition-all pointer-events-none whitespace-nowrap z-10">
+                            Manage Account
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-red-600"></div>
+                          </div>
+                        </div>
+
                       </div>
                     </td>
                     
@@ -257,6 +274,12 @@ const AdminManageUsers = () => {
           </div>
         </div>
       )}
+
+      {/* ================= PROFILE PREVIEW MODAL ================= */}
+      <AdminProfilePreviewModal 
+        user={previewUser} 
+        onClose={() => setPreviewUser(null)} 
+      />
 
     </div>
   );

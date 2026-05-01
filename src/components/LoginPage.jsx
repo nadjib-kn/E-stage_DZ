@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useGoogleLogin } from '@react-oauth/google';
 
 const LoginPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
 
   const [isSignUpActive, setIsSignUpActive] = useState(
     location.state?.isSignUp || false,
@@ -34,10 +35,10 @@ const LoginPage = () => {
     text: "",
   });
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError("");
-    const result = login(loginEmail, loginPassword);
+    const result = await login(loginEmail, loginPassword);
     if (result.success) {
       if (result.role === "student") navigate("/student");
       else if (result.role === "company") navigate("/company");
@@ -49,14 +50,14 @@ const LoginPage = () => {
     }
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setRegisterMessage({ type: "", text: "" });
     if (!registerName || !registerEmail || !registerPassword) {
       setRegisterMessage({ type: "error", text: "Please fill in all fields." });
       return;
     }
-    const result = register(
+    const result = await register(
       registerRole,
       registerName,
       registerEmail,
@@ -74,6 +75,37 @@ const LoginPage = () => {
       setRegisterMessage({ type: "error", text: result.message });
     }
   };
+
+  const handleGoogleSuccess = async (tokenResponse) => {
+    setLoginError("");
+    setRegisterMessage({ type: "", text: "" });
+    const result = await loginWithGoogle({ 
+      access_token: tokenResponse.access_token,
+      role: isSignUpActive ? registerRole : undefined 
+    });
+    if (result.success) {
+      if (result.role === "student") navigate("/student");
+      else if (result.role === "company") navigate("/company");
+      else if (result.role === "admin") navigate("/admin");
+    } else {
+      if (isSignUpActive) {
+        setRegisterMessage({ type: "error", text: result.message });
+      } else {
+        setLoginError(result.message);
+      }
+    }
+  };
+
+  const handleGoogleError = () => {
+    const errorMsg = "Google Login failed. Please try again.";
+    if (isSignUpActive) setRegisterMessage({ type: "error", text: errorMsg });
+    else setLoginError(errorMsg);
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: handleGoogleError,
+  });
 
   // Shared input classes — light and dark modes
   const inputClass =
@@ -227,12 +259,9 @@ const LoginPage = () => {
                 </span>
               </div>
 
-              <div className="flex gap-3">
-                <button type="button" className={socialBtnClass}>
-                  <GoogleIcon /> Google
-                </button>
-                <button type="button" className={socialBtnClass}>
-                  <LinkedInIcon /> LinkedIn
+              <div className="flex justify-center w-full mt-4">
+                <button type="button" onClick={() => googleLogin()} className={`${socialBtnClass} w-full`}>
+                  <GoogleIcon /> Continue with Google
                 </button>
               </div>
             </form>
@@ -303,12 +332,9 @@ const LoginPage = () => {
                 </span>
               </div>
 
-              <div className="flex gap-3">
-                <button type="button" className={socialBtnClass}>
-                  <GoogleIcon /> Google
-                </button>
-                <button type="button" className={socialBtnClass}>
-                  <LinkedInIcon /> LinkedIn
+              <div className="flex justify-center w-full mt-4">
+                <button type="button" onClick={() => googleLogin()} className={`${socialBtnClass} w-full`}>
+                  <GoogleIcon /> Continue with Google
                 </button>
               </div>
             </form>

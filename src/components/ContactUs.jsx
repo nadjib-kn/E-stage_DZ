@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import apiClient from '../api/apiClient';
 
 const ContactInfoItem = ({ icon, title, details }) => (
   <div className="flex items-center gap-4 sm:gap-5 group/item cursor-pointer p-3 -ml-3 rounded-xl transition-all duration-500 hover:bg-white/10">
@@ -30,13 +31,23 @@ const ContactUs = ({ title = "Contact Us", subText = "Have questions? Our team i
     });
   };
 
-  const handleSubmit = (e) => {
+  const [statusMessage, setStatusMessage] = useState(null);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const supportEmail = "support@internship-platform.dz";
-    const subject = encodeURIComponent(`New Contact Inquiry from ${formData.name}`);
-    const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`);
-    window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
-    setFormData({ name: '', email: '', message: '' });
+    setStatusMessage({ type: 'loading', text: 'Sending message...' });
+    try {
+      const response = await apiClient.post('/api/tickets/contact', formData);
+      if (response.data.success) {
+        setStatusMessage({ type: 'success', text: response.data.message || 'Message sent successfully!' });
+        setFormData({ name: '', email: '', message: '' });
+      } else {
+        setStatusMessage({ type: 'error', text: 'Failed to send message.' });
+      }
+    } catch (error) {
+      console.error(error);
+      setStatusMessage({ type: 'error', text: 'Server error. Please try again later.' });
+    }
   };
 
   return (
@@ -99,6 +110,16 @@ const ContactUs = ({ title = "Contact Us", subText = "Have questions? Our team i
           <div className="p-6 sm:p-8 lg:p-10 md:w-[55%] bg-white dark:bg-slate-800 relative z-10 flex flex-col justify-center">
             <h3 className="text-xl sm:text-2xl font-bold text-[#0F172A] dark:text-white mb-5 sm:mb-6">Send us a message</h3>
             
+            {statusMessage && (
+              <div className={`mb-4 p-3 rounded-xl text-sm font-semibold ${
+                statusMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400' :
+                statusMessage.type === 'error' ? 'bg-red-50 text-red-500 dark:bg-red-950/50 dark:text-red-400' :
+                'bg-blue-50 text-blue-500 dark:bg-blue-950/50 dark:text-blue-400'
+              }`}>
+                {statusMessage.text}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 

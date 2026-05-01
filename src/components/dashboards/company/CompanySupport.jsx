@@ -1,16 +1,33 @@
+// src/components/dashboards/company/CompanySupport.jsx
 import React, { useState } from 'react';
+import apiClient from '../../../api/apiClient';
 
 const CompanySupport = () => {
   const [formData, setFormData] = useState({
     subject: '',
     message: ''
   });
+  const [status, setStatus] = useState(null); // { type: 'success'|'error'|'loading', text: string }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, this will send a POST request to your backend
-    alert('Message sent! Our admin team will contact you shortly.');
-    setFormData({ subject: '', message: '' });
+    setStatus({ type: 'loading', text: 'Submitting your request...' });
+    try {
+      const response = await apiClient.post('/api/tickets', {
+        type: 'support',
+        subject: formData.subject,
+        description: formData.message,
+      });
+      if (response.data.success) {
+        setStatus({ type: 'success', text: response.data.message || 'Message sent! Our admin team will contact you shortly.' });
+        setFormData({ subject: '', message: '' });
+      } else {
+        setStatus({ type: 'error', text: 'Failed to submit request. Please try again.' });
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Server error. Please try again later.';
+      setStatus({ type: 'error', text: message });
+    }
   };
 
   return (
@@ -26,6 +43,18 @@ const CompanySupport = () => {
 
       {/* 2. Clean Support Form */}
       <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm transition-colors duration-300">
+        
+        {/* Status Banner */}
+        {status && (
+          <div className={`mb-5 p-3.5 rounded-xl text-sm font-semibold ${
+            status.type === 'success' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400' :
+            status.type === 'error'   ? 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400' :
+                                        'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400'
+          }`}>
+            {status.text}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           
           <div>
@@ -60,10 +89,11 @@ const CompanySupport = () => {
               Prefer email? <a href="mailto:support@estagedz.com" className="text-[#2563EB] dark:text-blue-400 font-bold hover:underline">support@estagedz.com</a>
             </span>
             <button 
-              type="submit" 
-              className="bg-[#2563EB] hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-xl transition-all duration-200 shadow-md shadow-blue-500/20 whitespace-nowrap"
+              type="submit"
+              disabled={status?.type === 'loading'}
+              className="bg-[#2563EB] hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 px-8 rounded-xl transition-all duration-200 shadow-md shadow-blue-500/20 whitespace-nowrap"
             >
-              Submit Request
+              {status?.type === 'loading' ? 'Submitting...' : 'Submit Request'}
             </button>
           </div>
           

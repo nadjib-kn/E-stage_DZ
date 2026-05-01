@@ -1,153 +1,123 @@
 // src/context/AdminContext.jsx
-import React, { createContext, useContext, useMemo } from 'react';
-import { useDatabase } from './DatabaseContext';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthContext';
+import apiClient from '../api/apiClient';
 
 const AdminContext = createContext();
 
 export const AdminProvider = ({ children }) => {
-  const { db, updateDb } = useDatabase();
+  const { currentUser } = useAuth();
 
-  // --------------------------------------------------------
-  // DERIVED STATE: Easily access lists of specific items
-  // Added optional chaining (?.) so it never crashes on empty data
-  // --------------------------------------------------------
-  const allUsers = db?.users || [];
-  const allStudents = useMemo(() => allUsers.filter(u => u?.role === 'student'), [allUsers]);
-  const allCompanies = useMemo(() => allUsers.filter(u => u?.role === 'company'), [allUsers]);
-  const allJobs = db?.jobs || [];
-  const allApplications = db?.applications || [];
-  const allTickets = db?.tickets || []; 
+  const [allUsers, setAllUsers] = useState([]);
+  const [allJobs, setAllJobs] = useState([]);
+  const [allApplications, setAllApplications] = useState([]);
+  const [allTickets, setAllTickets] = useState([]);
+  const [pendingCompanies, setPendingCompanies] = useState([]);
+  const [adminStats, setAdminStats] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
-  const adminStats = useMemo(() => ({
-    totalStudents: allStudents.length,
-    totalCompanies: allCompanies.length,
-    activeJobs: allJobs.filter(j => j?.status === 'Active').length,
-    totalApplications: allApplications.length,
-    pendingCompanies: allCompanies.filter(c => c?.verificationStatus === 'pending').length,
-    openTickets: allTickets.filter(t => t?.status === 'open').length,
-  }), [allStudents, allCompanies, allJobs, allApplications, allTickets]);
+  const fetchAll = useCallback(async () => {
+    if (currentUser?.role !== 'admin') return;
+    try {
+      setIsLoading(true);
+      const [usersRes, jobsRes, ticketsRes, statsRes, pendingRes] = await Promise.all([
+        apiClient.get('/api/admin/users'),
+        apiClient.get('/api/admin/jobs'),
+        apiClient.get('/api/admin/tickets'),
+        apiClient.get('/api/admin/stats'),
+        apiClient.get('/api/admin/companies/validation'),
+      ]);
+      setAllUsers(usersRes.data.data.users);
+      setAllJobs(jobsRes.data.data.jobs);
+      setAllTickets(ticketsRes.data.data.tickets);
+      setAdminStats(statsRes.data.data.stats);
+      setPendingCompanies(pendingRes.data.data.companies);
+      // Derive allApplications from stats endpoint recent data
+      setAllApplications(statsRes.data.data.recentApplications || []);
+    } catch (e) { console.error('Admin fetchAll:', e); }
+    finally { setIsLoading(false); }
+  }, [currentUser]);
 
-  // --------------------------------------------------------
-  // ADMIN POWERS - USER MANAGEMENT
-  // --------------------------------------------------------
-  const deleteUser = (userId) => {
-    updateDb(prev => {
-      const userToDelete = prev.users.find(u => u.id === userId);
-      let updatedJobs = prev.jobs;
-      let updatedApplications = prev.applications;
+  useEffect(() => {
+    if (currentUser?.role === 'admin') fetchAll();
+  }, [currentUser, fetchAll]);
 
-      // Cascade deletion logic
-      if (userToDelete?.role === 'company') {
-        const companyJobIds = prev.jobs.filter(j => j.companyId === userId).map(j => j.id);
-        updatedJobs = prev.jobs.filter(j => j.companyId !== userId);
-        updatedApplications = prev.applications.filter(app => !companyJobIds.includes(app.jobId));
-      } else if (userToDelete?.role === 'student') {
-        updatedApplications = prev.applications.filter(app => app.studentId !== userId);
-      }
+  // Computed values (match old context API)
+  const allStudents = allUsers.filter(u => u.role === 'student');
+  const allCompanies = allUsers.filter(u => u.role === 'company');
 
-      return {
-        ...prev,
-        users: prev.users.filter(u => u.id !== userId),
-        jobs: updatedJobs,
-        applications: updatedApplications
-      };
-    });
+  const suspendUser = async (userId) => {
+    const user = allUsers.find(u => u.id === userId);
+    const newStatus = user?.status === 'suspended' ? 'active' : 'suspended';
+    try {
+      await apiClient.patch(`/api/admin/users/${userId}/suspend`, { status: newStatus });
+      await fetchAll();
+      return { success: true };
+    } catch (e) { return { success: false, message: e.response?.data?.message }; }
   };
 
-  const suspendUser = (userId) => {
-    updateDb(prev => ({
-      ...prev,
-      users: prev.users.map(u => 
-        u.id === userId 
-          ? { ...u, status: u.status === 'suspended' ? 'active' : 'suspended' } 
-          : u
-      )
-    }));
+  const deleteUser = async (userId) => {
+    try {
+      await apiClient.delete(`/api/admin/users/${userId}`);
+      await fetchAll();
+      return { success: true };
+    } catch (e) { return { success: false, message: e.response?.data?.message }; }
   };
 
-  // --------------------------------------------------------
-  // ADMIN POWERS - COMPANY VALIDATION
-  // --------------------------------------------------------
-  const approveCompany = (companyId) => {
-    updateDb(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === companyId ? { ...u, verificationStatus: 'approved' } : u
-      )
-    }));
+  const blockJob = async (jobId) => {
+    try {
+      await apiClient.patch(`/api/admin/jobs/${jobId}/block`);
+      await fetchAll();
+      return { success: true };
+    } catch (e) { return { success: false, message: e.response?.data?.message }; }
   };
 
-  const rejectCompany = (companyId) => {
-    updateDb(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === companyId ? { ...u, verificationStatus: 'rejected' } : u
-      )
-    }));
+  const deleteJob = async (jobId) => {
+    try {
+      await apiClient.delete(`/api/admin/jobs/${jobId}`);
+      await fetchAll();
+      return { success: true };
+    } catch (e) { return { success: false, message: e.response?.data?.message }; }
   };
 
-  // Convenience wrapper used by AdminCompanyValidation
+  const approveCompany = async (companyId) => {
+    try {
+      await apiClient.patch(`/api/admin/companies/${companyId}/verify`, { verificationStatus: 'approved' });
+      await fetchAll();
+      return { success: true };
+    } catch (e) { return { success: false, message: e.response?.data?.message }; }
+  };
+
+  const rejectCompany = async (companyId) => {
+    try {
+      await apiClient.patch(`/api/admin/companies/${companyId}/verify`, { verificationStatus: 'rejected' });
+      await fetchAll();
+      return { success: true };
+    } catch (e) { return { success: false, message: e.response?.data?.message }; }
+  };
+
   const updateCompanyStatus = (companyId, newStatus) => {
-    if (newStatus === 'approved') {
-      approveCompany(companyId);
-    } else if (newStatus === 'rejected') {
-      rejectCompany(companyId);
-    }
+    if (newStatus === 'approved') return approveCompany(companyId);
+    if (newStatus === 'rejected') return rejectCompany(companyId);
   };
 
-  // --------------------------------------------------------
-  // ADMIN POWERS - JOBS/INTERNSHIPS
-  // --------------------------------------------------------
-  const deleteJob = (jobId) => {
-    updateDb(prev => ({
-      ...prev,
-      jobs: prev.jobs.filter(job => job.id !== jobId),
-      applications: prev.applications.filter(app => app.jobId !== jobId)
-    }));
-  };
-
-  // Block/Unblock Job Logic
-  const blockJob = (jobId) => {
-    updateDb(prev => ({
-      ...prev,
-      jobs: prev.jobs.map(j => 
-        j.id === jobId 
-          // If it's already blocked, switch it back to Active. Otherwise, Block it.
-          ? { ...j, status: j.status?.toLowerCase() === 'blocked' ? 'Active' : 'Blocked' } 
-          : j
-      )
-    }));
-  };
-
-  // --------------------------------------------------------
-  // ADMIN POWERS - CONFLICTS & TICKETS
-  // --------------------------------------------------------
-  const resolveTicket = (ticketId) => {
-    updateDb(prev => ({
-      ...prev,
-      tickets: prev.tickets.map(t =>
-        t.id === ticketId ? { ...t, status: 'resolved' } : t
-      )
-    }));
+  const resolveTicket = async (ticketId) => {
+    try {
+      await apiClient.patch(`/api/admin/tickets/${ticketId}/resolve`, { status: 'resolved' });
+      await fetchAll();
+      return { success: true };
+    } catch (e) { return { success: false, message: e.response?.data?.message }; }
   };
 
   return (
     <AdminContext.Provider value={{
-      allUsers,
-      allStudents,
-      allCompanies,
-      allJobs,
-      allApplications,
-      allTickets,
-      adminStats,
-      deleteUser,
-      suspendUser,      
-      deleteJob,
-      blockJob,
-      approveCompany,
-      rejectCompany,
-      updateCompanyStatus, // FIX: Now exported for AdminCompanyValidation
-      resolveTicket
+      allUsers, allStudents, allCompanies, allJobs,
+      allApplications, allTickets, pendingCompanies,
+      adminStats, isLoading,
+      suspendUser, deleteUser,
+      blockJob, deleteJob,
+      approveCompany, rejectCompany, updateCompanyStatus,
+      resolveTicket, refreshData: fetchAll,
     }}>
       {children}
     </AdminContext.Provider>

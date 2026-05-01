@@ -1,114 +1,108 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { readDB, writeDB } from '../utils/storageHelper';
+import apiClient from '../api/apiClient';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const AuthContext = createContext();
+
+// Helper to ensure uploaded files resolve to the backend server
+const normalizeUser = (user) => {
+  if (!user) return user;
+  const normalized = { ...user };
+  if (normalized.avatar && normalized.avatar.startsWith('/uploads/')) {
+    normalized.avatar = `${API_URL}${normalized.avatar}`;
+  }
+  if (normalized.resumeUrl && normalized.resumeUrl.startsWith('/uploads/')) {
+    normalized.resumeUrl = `${API_URL}${normalized.resumeUrl}`;
+  }
+  return normalized;
+};
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // On mount: restore user from localStorage and validate token
   useEffect(() => {
     const savedUser = localStorage.getItem('eStageUser');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
+    const savedToken = localStorage.getItem('eStageToken');
+    if (savedUser && savedToken) {
+      setCurrentUser(normalizeUser(JSON.parse(savedUser)));
     }
     setIsLoading(false);
   }, []);
 
-  // SIGN IN LOGIC
-  const login = (email, password) => {
-    const db = readDB(); 
-    const user = db.users.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (user) {
-      // BLOCK 1: Check if the company is pending validation
-      if (user.role === 'company' && user.verificationStatus === 'pending') {
-        return { success: false, message: "Your company account is pending admin approval. Please check back later." };
-      }
-      
-      // BLOCK 2: Check if the company was rejected
-      if (user.role === 'company' && user.verificationStatus === 'rejected') {
-        return { success: false, message: "Your company registration was rejected. Please contact support." };
-      }
-
-      // BLOCK 3: Check if user is suspended (Applies to all users)
-      if (user.status === 'suspended') {
-        return { success: false, message: "Your account has been suspended. Please contact support." };
-      }
-
-      const { password: _, ...safeUser } = user; 
-      setCurrentUser(safeUser);
-      localStorage.setItem('eStageUser', JSON.stringify(safeUser));
-      return { success: true, role: user.role };
-    } else {
-      return { success: false, message: "Invalid email or password" };
+  // SIGN IN
+  const login = async (email, password) => {
+    try {
+      const { data } = await apiClient.post('/api/auth/login', { email, password });
+      const { token, user } = data.data;
+      const normalizedUser = normalizeUser(user);
+      localStorage.setItem('eStageToken', token);
+      localStorage.setItem('eStageUser', JSON.stringify(normalizedUser));
+      setCurrentUser(normalizedUser);
+      return { success: true, role: normalizedUser.role };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Login failed. Please try again.';
+      return { success: false, message };
     }
   };
 
-  // SIGN UP LOGIC (NEW)
-  const register = (role, name, email, password) => {
-    const db = readDB();
-
-    // Check if email already exists
-    if (db.users.find(u => u.email === email)) {
-      return { success: false, message: "Email is already registered." };
-    }
-
-    const newUser = {
-      id: `u${Date.now()}`,
-      role: role,
-      email: email,
-      password: password,
-      status: 'active',
-      // Assign the name to the correct field based on role
-      ...(role === 'student' ? { name: name } : { companyName: name, company: name }),
-      // Assign default avatars
-      avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${name}&backgroundColor=ffffff`
-    };
-
-    // If it's a company, lock them out until Admin approves them
-    if (role === 'company') {
-      newUser.verificationStatus = 'pending';
-    }
-
-    db.users.push(newUser);
-    writeDB(db);
-
-    if (role === 'company') {
-      return { success: true, message: "Account created! You must wait for Admin approval before logging in." };
-    } else {
-      return { success: true, message: "Account created successfully! You can now sign in." };
+  // SIGN IN WITH GOOGLE
+  const loginWithGoogle = async (tokenData) => {
+    try {
+      // support both credential (id_token) and access_token
+      const { data } = await apiClient.post('/api/auth/google', tokenData);
+      const { token, user } = data.data;
+      const normalizedUser = normalizeUser(user);
+      localStorage.setItem('eStageToken', token);
+      localStorage.setItem('eStageUser', JSON.stringify(normalizedUser));
+      setCurrentUser(normalizedUser);
+      return { success: true, role: normalizedUser.role };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Google Login failed. Please try again.';
+      return { success: false, message };
     }
   };
 
-  const logout = () => {
-    setCurrentUser(null);
+  // SIGN UP
+  const register = async (role, name, email, password) => {
+    try {
+      const body = { role, email, password };
+      if (role === 'student') {
+        const parts = name.trim().split(' ');
+        body.firstName = parts[0] || name;
+        body.lastName = parts.slice(1).join(' ') || '';
+      } else {
+        body.companyName = name;
+      }
+      const { data } = await apiClient.post('/api/auth/register', body);
+      return { success: true, message: data.message };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Registration failed.';
+      return { success: false, message };
+    }
+  };
+
+  // SIGN OUT
+  const logout = async () => {
+    try { await apiClient.post('/api/auth/logout'); } catch (_) {}
+    localStorage.removeItem('eStageToken');
     localStorage.removeItem('eStageUser');
+    setCurrentUser(null);
   };
 
-  // FIX: updateUser now also persists changes to the main database,
-  // not just to eStageUser in localStorage. This ensures Admin sees 
-  // updated profiles and data doesn't vanish on context re-read.
-  const updateUser = (updatedInfo) => {
-    const updatedUser = { ...currentUser, ...updatedInfo };
-    setCurrentUser(updatedUser);
-    localStorage.setItem('eStageUser', JSON.stringify(updatedUser));
-
-    // Also update the user record in the main database
-    const db = readDB();
-    db.users = db.users.map(u =>
-      u.id === updatedUser.id ? { ...u, ...updatedInfo } : u
-    );
-    writeDB(db);
-
+  // UPDATE LOCAL USER STATE (called after profile edits)
+  const updateUser = (data) => {
+    const updated = normalizeUser({ ...currentUser, ...data });
+    setCurrentUser(updated);
+    localStorage.setItem('eStageUser', JSON.stringify(updated));
     return { success: true };
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, register, logout, updateUser, isLoading }}>
+    <AuthContext.Provider value={{ currentUser, login, loginWithGoogle, register, logout, updateUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,84 +1,92 @@
 // src/context/StudentContext.jsx
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { useDatabase } from './DatabaseContext';
+import apiClient from '../api/apiClient';
 
 const StudentContext = createContext();
 
 export const StudentProvider = ({ children }) => {
   const { currentUser } = useAuth();
-  const { db, updateDb } = useDatabase();
 
-  const applyForJob = (jobId) => {
-    if (!currentUser) return { success: false, message: "Not logged in" };
+  const [jobs, setJobs] = useState([]);
+  const [myApplications, setMyApplications] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-    const alreadyApplied = db.applications.some(
-      (app) => app.jobId === jobId && app.studentId === currentUser.id
-    );
-
-    if (alreadyApplied) {
-      return { success: false, message: "You have already applied for this role." };
+  // Fetch active jobs (with hasApplied flag from backend)
+  const fetchJobs = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      setIsLoading(true);
+      const { data } = await apiClient.get('/api/jobs');
+      setJobs(data.data.jobs);
+    } catch (e) {
+      console.error('fetchJobs:', e);
+    } finally {
+      setIsLoading(false);
     }
+  }, [currentUser]);
 
-    const newApplication = {
-      id: `app_${Date.now()}`,
-      studentId: currentUser.id,
-      jobId: jobId,
-      status: "Pending",
-      dateApplied: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-    };
+  // Fetch student's own applications
+  const fetchMyApplications = useCallback(async () => {
+    if (currentUser?.role !== 'student') return;
+    try {
+      const { data } = await apiClient.get('/api/applications/mine');
+      setMyApplications(data.data.applications);
+    } catch (e) {
+      console.error('fetchMyApplications:', e);
+    }
+  }, [currentUser]);
 
-    updateDb(prev => ({ ...prev, applications: [...prev.applications, newApplication] }));
-    return { success: true, message: "Application submitted successfully!" };
+  // Fetch dashboard stats
+  const fetchDashboardStats = useCallback(async () => {
+    if (currentUser?.role !== 'student') return;
+    try {
+      const { data } = await apiClient.get('/api/dashboard/student');
+      setDashboardStats(data.data);
+    } catch (e) {
+      console.error('fetchDashboardStats:', e);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser?.role === 'student') {
+      fetchJobs();
+      fetchMyApplications();
+      fetchDashboardStats();
+    }
+  }, [currentUser, fetchJobs, fetchMyApplications, fetchDashboardStats]);
+
+  const applyForJob = async (jobId) => {
+    try {
+      await apiClient.post(`/api/applications/apply/${jobId}`);
+      // Refresh both lists
+      await Promise.all([fetchJobs(), fetchMyApplications(), fetchDashboardStats()]);
+      return { success: true, message: 'Application submitted successfully!' };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to apply.';
+      return { success: false, message };
+    }
   };
 
-  // FIX: Use functional updater to avoid stale closure bug.
-  // Previously, the filter was computed outside setDb, capturing a stale `db`.
-  const cancelApplication = (jobId) => {
-    if (!currentUser) return { success: false, message: "Not logged in" };
-
-    updateDb(prev => ({
-      ...prev,
-      applications: prev.applications.filter(
-        (app) => !(app.jobId === jobId && app.studentId === currentUser.id)
-      )
-    }));
-    return { success: true, message: "Application cancelled successfully." };
+  const cancelApplication = async (jobId) => {
+    try {
+      await apiClient.delete(`/api/applications/cancel/${jobId}`);
+      await Promise.all([fetchJobs(), fetchMyApplications(), fetchDashboardStats()]);
+      return { success: true, message: 'Application withdrawn.' };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to cancel.';
+      return { success: false, message };
+    }
   };
 
-  // FIX: Wrapped in useMemo to prevent recalculation on every render.
-  // FIX: Only show Active jobs to students (was showing Draft/Closed/Blocked).
-  const jobs = useMemo(() => {
-    if (!currentUser) return db.jobs.filter(job => job.status === 'Active');
-
-    return db.jobs
-      .filter(job => job.status === 'Active')
-      .map(job => {
-        const hasApplied = db.applications.some(
-          app => app.jobId === job.id && app.studentId === currentUser.id
-        );
-        return { ...job, hasApplied };
-      });
-  }, [db.jobs, db.applications, currentUser]);
-
-  // FIX: Wrapped in useMemo to prevent recalculation on every render.
-  const myApplications = useMemo(() => {
-    if (!currentUser) return [];
-
-    const myApps = db.applications.filter(app => app.studentId === currentUser.id);
-
-    return myApps.map(app => {
-      const jobDetails = db.jobs.find(job => job.id === app.jobId);
-      return { ...jobDetails, ...app }; 
-    });
-  }, [db.applications, db.jobs, currentUser]);
-  
   return (
-    <StudentContext.Provider value={{ 
-      jobs, 
-      applyForJob, 
-      cancelApplication, 
-      myApplications 
+    <StudentContext.Provider value={{
+      jobs, myApplications, dashboardStats, isLoading,
+      applyForJob, cancelApplication,
+      refreshJobs: fetchJobs,
+      refreshApplications: fetchMyApplications,
+      refreshDashboard: fetchDashboardStats,
     }}>
       {children}
     </StudentContext.Provider>
