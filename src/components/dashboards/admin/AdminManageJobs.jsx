@@ -1,16 +1,28 @@
 // src/components/dashboards/admin/AdminManageJobs.jsx
 import React, { useState } from 'react';
 import { useAdmin } from '../../../context/AdminContext';
+import CompanyProfilePopup from '../student/CompanyProfilePopup';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const resolveLogoSrc = (logo) => {
+  if (!logo) return null;
+  if (logo.startsWith('http') || logo.startsWith('data:')) return logo;
+  if (logo.startsWith('avatars/')) return `${API_URL}/uploads/${logo}`;
+  if (!logo.startsWith('/')) return `${API_URL}/${logo}`;
+  return `${API_URL}${logo}`;
+};
 
 const AdminManageJobs = () => {
-  // FIX: Added allApplications from context instead of importing mockDatabase directly
-  const { allJobs, allApplications, deleteJob, blockJob } = useAdmin(); 
+  const { allJobs, allApplications, allCompanies, deleteJob, blockJob } = useAdmin(); 
   
   const [filter, setFilter] = useState('all'); // 'all', 'active', 'closed', 'draft', 'blocked'
   const [searchQuery, setSearchQuery] = useState('');
 
-  // New state for our custom action modal
+  // Modals state
   const [actionModal, setActionModal] = useState({ isOpen: false, job: null });
+  const [previewModal, setPreviewModal] = useState({ isOpen: false, job: null });
+  const [companyModal, setCompanyModal] = useState({ isOpen: false, company: null });
 
   // FIX: Use allJobs from context directly, no fallback to raw mockDatabase
   const jobsList = allJobs;
@@ -141,10 +153,27 @@ const AdminManageJobs = () => {
                     {/* Company Column */}
                     <td className="p-5">
                       <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex flex-shrink-0 items-center justify-center font-bold text-sm shadow-sm ${job.status.toLowerCase() === 'blocked' ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 grayscale' : job.logoColor || 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}>
-                          {job.logo || job.company.charAt(0)}
-                        </div>
-                        <p className={`text-sm font-bold ${job.status.toLowerCase() === 'blocked' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`}>{job.company}</p>
+                        {resolveLogoSrc(job.logo) ? (
+                          <img 
+                            src={resolveLogoSrc(job.logo)} 
+                            alt={job.company} 
+                            className={`w-10 h-10 object-cover rounded-xl shadow-sm cursor-pointer hover:opacity-80 transition-opacity ${job.status.toLowerCase() === 'blocked' ? 'grayscale opacity-50' : 'bg-white'}`}
+                            onClick={() => setCompanyModal({ isOpen: true, company: allCompanies.find(c => c.id === job.companyId) })}
+                          />
+                        ) : (
+                          <div 
+                            className={`w-10 h-10 rounded-xl flex flex-shrink-0 items-center justify-center font-bold text-sm shadow-sm cursor-pointer hover:opacity-80 transition-opacity ${job.status.toLowerCase() === 'blocked' ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 grayscale' : job.logoColor || 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}
+                            onClick={() => setCompanyModal({ isOpen: true, company: allCompanies.find(c => c.id === job.companyId) })}
+                          >
+                            {job.company?.charAt(0)?.toUpperCase()}
+                          </div>
+                        )}
+                        <button 
+                          onClick={() => setCompanyModal({ isOpen: true, company: allCompanies.find(c => c.id === job.companyId) })}
+                          className={`text-sm font-bold text-left hover:underline focus:outline-none ${job.status.toLowerCase() === 'blocked' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300 hover:text-[#2563EB] dark:hover:text-blue-400'}`}
+                        >
+                          {job.company}
+                        </button>
                       </div>
                     </td>
 
@@ -191,6 +220,7 @@ const AdminManageJobs = () => {
                     <td className="p-5 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
+                          onClick={() => setPreviewModal({ isOpen: true, job })}
                           className="p-2 text-slate-400 hover:text-[#2563EB] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
                           title="View Offer Details"
                         >
@@ -282,6 +312,109 @@ const AdminManageJobs = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ================= PREVIEW MODAL ================= */}
+      {previewModal.isOpen && previewModal.job && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setPreviewModal({ isOpen: false, job: null })}>
+          <div className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            
+            {/* Header Banner */}
+            <div className="h-32 bg-gradient-to-r from-[#2563EB] to-indigo-600 relative">
+              <button 
+                onClick={() => setPreviewModal({ isOpen: false, job: null })} 
+                className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors backdrop-blur-sm"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              
+              <div className="absolute -bottom-10 left-8 flex items-end gap-4">
+                <div className="w-20 h-20 rounded-2xl bg-white dark:bg-slate-800 p-1 shadow-lg border border-slate-100 dark:border-slate-700 flex items-center justify-center font-bold text-[#2563EB] text-3xl overflow-hidden">
+                  {resolveLogoSrc(previewModal.job.logo) ? (
+                    <img src={resolveLogoSrc(previewModal.job.logo)} alt={previewModal.job.company} className="w-full h-full object-cover rounded-[10px]" />
+                  ) : (
+                    previewModal.job.company?.charAt(0)?.toUpperCase()
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-14 px-8 pb-8 max-h-[65vh] overflow-y-auto custom-scrollbar">
+              <div className="mb-6 flex justify-between items-start gap-4">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1">{previewModal.job.role}</h3>
+                  <p className="text-base font-bold text-[#2563EB] dark:text-blue-400">{previewModal.job.company}</p>
+                </div>
+                {previewModal.job.status.toLowerCase() === 'blocked' && (
+                  <span className="px-3 py-1.5 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-lg text-xs font-bold uppercase flex items-center gap-1.5 border border-orange-200 dark:border-orange-500/20 shrink-0">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    Blocked
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-100 dark:border-slate-700 pb-6">
+                <span className="px-3 py-1.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold uppercase flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  {previewModal.job.location}
+                </span>
+                <span className="px-3 py-1.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold uppercase flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  {previewModal.job.type}
+                </span>
+                {previewModal.job.duration && (
+                  <span className="px-3 py-1.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold uppercase flex items-center gap-1.5">
+                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {previewModal.job.duration}
+                  </span>
+                )}
+              </div>
+
+              {previewModal.job.description && (
+                <div className="mb-8">
+                  <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-[#2563EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
+                    Description
+                  </h4>
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{previewModal.job.description}</p>
+                  </div>
+                </div>
+              )}
+
+              {previewModal.job.requirements && (
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Requirements
+                  </h4>
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{previewModal.job.requirements}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Action Bar */}
+            <div className="px-8 py-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3 rounded-b-3xl">
+              <button 
+                onClick={() => setPreviewModal({ isOpen: false, job: null })}
+                className="px-6 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-xl transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= COMPANY PROFILE MODAL ================= */}
+      {companyModal.isOpen && companyModal.company && (
+        <CompanyProfilePopup 
+          company={companyModal.company} 
+          loading={false} 
+          onClose={() => setCompanyModal({ isOpen: false, company: null })} 
+        />
       )}
 
     </div>

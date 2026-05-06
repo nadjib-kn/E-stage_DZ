@@ -3,6 +3,34 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useStudent } from '../../../context/StudentContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const formatDate = (dateString) => {
+  if (!dateString) return '—';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const renderAppLogo = (app, roundedClass = 'rounded-xl') => {
+  const companyName = app.job?.company || app.company || 'Company';
+  const avatar = app.job?.logo || app.logo;
+  const fallback = avatar || companyName.charAt(0)?.toUpperCase() || '🏢';
+  
+  if (typeof avatar === 'string' && (avatar.startsWith('http') || avatar.startsWith('uploads/') || avatar.startsWith('avatars/') || avatar.startsWith('/'))) {
+    let src = avatar;
+    if (!src.startsWith('http')) {
+      if (src.startsWith('avatars/')) src = `/uploads/${src}`;
+      else if (!src.startsWith('/')) src = `/${src}`;
+      src = `${API_URL}${src}`;
+    }
+    return <img src={src} alt={companyName} className={`w-full h-full object-cover ${roundedClass}`} />;
+  }
+  return fallback;
+};
+
 const DashboardOverview = () => {
   // 1. Pull data from our contexts
   const { currentUser } = useAuth();
@@ -16,10 +44,21 @@ const DashboardOverview = () => {
   // 3. Get the 3 most recent applications
   const recentApplications = myApplications ? [...myApplications].reverse().slice(0, 3) : [];
 
+  // Helper to ensure skills is correctly parsed
+  const parseSkills = (skills) => {
+    if (Array.isArray(skills)) return skills;
+    if (typeof skills === 'string') {
+      try { return JSON.parse(skills); } catch (e) { return []; }
+    }
+    return [];
+  };
+
   // --- NEW: Profile Strength Calculation ---
   const calculateProfileStrength = () => {
     // If no user is loaded yet, return 0
     if (!currentUser) return { percentage: 0, checklist: [] };
+    
+    const parsedSkills = parseSkills(currentUser.skills);
 
     // Define the criteria for a "complete" profile based on your MyProfile state
     const checklist = [
@@ -41,7 +80,7 @@ const DashboardOverview = () => {
       {
         id: 'skills',
         label: 'Skills Added',
-        completed: Boolean(currentUser.skills && currentUser.skills.length > 0)
+        completed: Boolean(parsedSkills.length > 0)
       },
       {
         id: 'links',
@@ -138,12 +177,12 @@ const DashboardOverview = () => {
               recentApplications.map((app) => (
                 <div key={app.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl ${app.logoColor || 'bg-blue-100 text-blue-600'}`}>
-                      {app.logo || app.company?.charAt(0)}
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl ${app.logoColor || 'bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'}`}>
+                      {renderAppLogo(app, 'rounded-xl')}
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#2563EB] dark:group-hover:text-blue-400 transition-colors">{app.role}</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{app.company} • Applied {app.dateApplied}</p>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#2563EB] dark:group-hover:text-blue-400 transition-colors">{app.job?.role || '—'}</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{app.job?.company || 'Company'} • Applied {formatDate(app.dateApplied)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -167,7 +206,7 @@ const DashboardOverview = () => {
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6 flex flex-col justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Profile Strength</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">A complete profile increases your chances of getting hired by 70%.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">A complete profile increases your chances of getting hired.</p>
             
             {/* Dynamic Progress Circle */}
             <div className="relative w-32 h-32 mx-auto mb-6">

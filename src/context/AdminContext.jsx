@@ -64,6 +64,14 @@ export const AdminProvider = ({ children }) => {
     } catch (e) { return { success: false, message: e.response?.data?.message }; }
   };
 
+  const restoreUser = async (userId) => {
+    try {
+      await apiClient.patch(`/api/admin/users/${userId}/restore`);
+      await fetchAll();
+      return { success: true };
+    } catch (e) { return { success: false, message: e.response?.data?.message }; }
+  };
+
   const blockJob = async (jobId) => {
     try {
       await apiClient.patch(`/api/admin/jobs/${jobId}/block`);
@@ -114,7 +122,7 @@ export const AdminProvider = ({ children }) => {
       allUsers, allStudents, allCompanies, allJobs,
       allApplications, allTickets, pendingCompanies,
       adminStats, isLoading,
-      suspendUser, deleteUser,
+      suspendUser, deleteUser, restoreUser,
       blockJob, deleteJob,
       approveCompany, rejectCompany, updateCompanyStatus,
       resolveTicket, refreshData: fetchAll,

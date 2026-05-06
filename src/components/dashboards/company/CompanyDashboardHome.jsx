@@ -3,6 +3,25 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useCompanyData } from '../../../context/CompanyDataContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const resolveAvatarSrc = (avatar) => {
+  if (!avatar) return null;
+  if (avatar.startsWith('http') || avatar.startsWith('data:')) return avatar;
+  if (avatar.startsWith('avatars/')) return `${API_URL}/uploads/${avatar}`;
+  if (!avatar.startsWith('/')) return `${API_URL}/${avatar}`;
+  return `${API_URL}${avatar}`;
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '—';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
 const CompanyDashboardHome = () => {
   const { currentUser } = useAuth();
   const { dashboardStats, companyJobs, companyApplications } = useCompanyData();
@@ -96,14 +115,20 @@ const CompanyDashboardHome = () => {
                   recentApplications.map((app) => (
                     <tr key={app.id} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
                       <td className="p-4 flex items-center gap-3">
-                        <img src={app.student?.avatar} alt={app.student?.firstName} className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700" />
+                        {resolveAvatarSrc(app.student?.avatar) ? (
+                          <img src={resolveAvatarSrc(app.student?.avatar)} alt={app.student?.firstName} className="w-10 h-10 object-cover rounded-full bg-slate-200 dark:bg-slate-700" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-500 dark:text-slate-400">
+                            {app.student?.firstName?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                        )}
                         <div>
                           <p className="text-sm font-bold text-slate-900 dark:text-white">{app.student?.firstName} {app.student?.lastName}</p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">{app.student?.major}</p>
                         </div>
                       </td>
-                      <td className="p-4 text-sm font-medium text-slate-700 dark:text-slate-300">{app.jobTitle}</td>
-                      <td className="p-4 text-sm text-slate-500 dark:text-slate-400">{app.dateApplied}</td>
+                      <td className="p-4 text-sm font-medium text-slate-700 dark:text-slate-300">{app.job?.role || '—'}</td>
+                      <td className="p-4 text-sm text-slate-500 dark:text-slate-400">{formatDate(app.dateApplied)}</td>
                       <td className="p-4">
                         <span className={`px-3 py-1 text-xs font-bold rounded-full 
                           ${app.status === 'Pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' : ''}

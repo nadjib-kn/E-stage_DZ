@@ -36,7 +36,7 @@ const AdminProfilePreviewModal = ({ user, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-800 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-700">

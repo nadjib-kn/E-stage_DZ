@@ -3,8 +3,8 @@ import { useAdmin } from "../../../context/AdminContext";
 import AdminProfilePreviewModal from './AdminProfilePreviewModal';
 
 const AdminManageUsers = () => {
-  // Added suspendUser from context
-  const { allUsers, deleteUser, suspendUser } = useAdmin(); 
+  // Added suspendUser and restoreUser from context
+  const { allUsers, deleteUser, suspendUser, restoreUser } = useAdmin(); 
   const [filter, setFilter] = useState('all'); // 'all', 'student', 'company'
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -40,6 +40,13 @@ const AdminManageUsers = () => {
   const handleConfirmSuspend = () => {
     if (suspendUser && actionModal.user) {
       suspendUser(actionModal.user.id);
+    }
+    closeModal();
+  };
+
+  const handleConfirmRestore = () => {
+    if (restoreUser && actionModal.user) {
+      restoreUser(actionModal.user.id);
     }
     closeModal();
   };
@@ -133,7 +140,7 @@ const AdminManageUsers = () => {
                             : user.companyName?.charAt(0)}
                         </div>
                         <div>
-                          <p className={`text-sm font-bold ${user.status === 'suspended' ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>
+                          <p className={`text-sm font-bold ${['suspended', 'deleted'].includes(user.status) ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>
                             {user.role === 'student' ? `${user.firstName} ${user.lastName}` : user.companyName}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">ID: {user.id}</p>
@@ -143,7 +150,7 @@ const AdminManageUsers = () => {
 
                     {/* Contact Column */}
                     <td className="p-5">
-                      <p className={`text-sm font-medium ${user.status === 'suspended' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`}>
+                      <p className={`text-sm font-medium ${['suspended', 'deleted'].includes(user.status) ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`}>
                         {user.email}
                       </p>
                     </td>
@@ -159,6 +166,12 @@ const AdminManageUsers = () => {
                       {user.status === 'suspended' && (
                         <span className="inline-flex items-center px-2 py-1 text-[10px] font-bold rounded-md uppercase bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-500/20">
                           Suspended
+                        </span>
+                      )}
+                      {/* Deleted Badge */}
+                      {user.status === 'deleted' && (
+                        <span className="inline-flex items-center px-2 py-1 text-[10px] font-bold rounded-md uppercase bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-500/20">
+                          Deleted
                         </span>
                       )}
                     </td>
@@ -234,33 +247,50 @@ const AdminManageUsers = () => {
             </div>
             
             <div className="p-6 space-y-3 bg-slate-50/50 dark:bg-slate-700/50">
-              {/* Suspend Button */}
-              <button 
-                onClick={handleConfirmSuspend}
-                className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-orange-200 dark:border-orange-500/30 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-300 dark:hover:border-orange-500/50 transition-colors group"
-              >
-                <div className="text-left">
-                  <p className="font-bold text-orange-700 dark:text-orange-400">Suspend Account</p>
-                  <p className="text-xs text-orange-600/70 dark:text-orange-400/70 mt-0.5">Temporarily block access. Can be undone.</p>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-                </div>
-              </button>
+              {actionModal.user.status === 'deleted' ? (
+                <button 
+                  onClick={handleConfirmRestore}
+                  className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-green-200 dark:border-green-500/30 rounded-xl hover:bg-green-50 dark:hover:bg-green-500/10 hover:border-green-300 dark:hover:border-green-500/50 transition-colors group"
+                >
+                  <div className="text-left">
+                    <p className="font-bold text-green-700 dark:text-green-400">Restore Account</p>
+                    <p className="text-xs text-green-600/70 dark:text-green-400/70 mt-0.5">Reactivate user and restore all access.</p>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  </div>
+                </button>
+              ) : (
+                <>
+                  {/* Suspend Button */}
+                  <button 
+                    onClick={handleConfirmSuspend}
+                    className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-orange-200 dark:border-orange-500/30 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-300 dark:hover:border-orange-500/50 transition-colors group"
+                  >
+                    <div className="text-left">
+                      <p className="font-bold text-orange-700 dark:text-orange-400">{actionModal.user.status === 'suspended' ? 'Unsuspend Account' : 'Suspend Account'}</p>
+                      <p className="text-xs text-orange-600/70 dark:text-orange-400/70 mt-0.5">Temporarily block access. Can be undone.</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                    </div>
+                  </button>
 
-              {/* Delete Button */}
-              <button 
-                onClick={handleConfirmDelete}
-                className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-500/30 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-300 dark:hover:border-red-500/50 transition-colors group"
-              >
-                <div className="text-left">
-                  <p className="font-bold text-red-700 dark:text-red-400">Permanently Delete</p>
-                  <p className="text-xs text-red-600/70 dark:text-red-400/70 mt-0.5">Erase user and all their data. Cannot be undone.</p>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </div>
-              </button>
+                  {/* Delete Button */}
+                  <button 
+                    onClick={handleConfirmDelete}
+                    className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-500/30 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-300 dark:hover:border-red-500/50 transition-colors group"
+                  >
+                    <div className="text-left">
+                      <p className="font-bold text-red-700 dark:text-red-400">Permanently Delete</p>
+                      <p className="text-xs text-red-600/70 dark:text-red-400/70 mt-0.5">Erase user and all their data. Cannot be undone.</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </div>
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
