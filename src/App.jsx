@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 // Import all your public components
 import Navbar from './components/Navbar';
-import Hero from './components/hero';
+import Hero from './components/Hero';
 import Title from './components/Title';
 import Features from './components/Features';
 import HowItWorks from './components/HowItWorks';
