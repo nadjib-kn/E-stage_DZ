@@ -85,6 +85,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // FORGOT PASSWORD — sends reset email
+  const forgotPassword = async (email) => {
+    try {
+      const { data } = await apiClient.post('/api/auth/forgot-password', { email });
+      return { success: true, message: data.message || 'Reset link sent. Please check your inbox.' };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to send reset email. Please try again.';
+      return { success: false, message };
+    }
+  };
+
   // SIGN OUT
   const logout = async () => {
     try { await apiClient.post('/api/auth/logout'); } catch (_) {}
@@ -102,7 +113,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, loginWithGoogle, register, logout, updateUser, isLoading }}>
+    <AuthContext.Provider value={{ currentUser, login, loginWithGoogle, register, logout, updateUser, forgotPassword, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
