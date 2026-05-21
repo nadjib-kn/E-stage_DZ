@@ -96,6 +96,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // RESET PASSWORD
+  const resetPassword = async (token, newPassword) => {
+    try {
+      const { data } = await apiClient.post('/api/auth/reset-password', { token, newPassword });
+      return { success: true, message: data.message };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to reset password. Please try again.';
+      return { success: false, message };
+    }
+  };
+
   // SIGN OUT
   const logout = async () => {
     try { await apiClient.post('/api/auth/logout'); } catch (_) {}
@@ -113,7 +124,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, loginWithGoogle, register, logout, updateUser, forgotPassword, isLoading }}>
+    <AuthContext.Provider value={{ currentUser, login, loginWithGoogle, register, logout, updateUser, forgotPassword, resetPassword, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

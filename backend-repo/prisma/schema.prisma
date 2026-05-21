@@ -42,6 +42,10 @@ model User {
   nif                String?
   registreCommerce   String?
 
+  // Password reset
+  resetToken           String?
+  resetTokenExpiry     DateTime?
+
   // Relations
   jobs                 Job[]         @relation("CompanyJobs")
   applications         Application[] @relation("StudentApplications")
