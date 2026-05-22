@@ -54,8 +54,6 @@ const formatDate = (iso) => {
 const StatusBadge = ({ status }) => {
   const config = {
     Pending:       { cls: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20',   icon: '⏳' },
-    'Under Review':{ cls: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/20',         icon: '🔍' },
-    Interview:     { cls: 'bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/20', icon: '📅' },
     Accepted:      { cls: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20', icon: '✅' },
     Rejected:      { cls: 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20',               icon: '❌' },
   };
@@ -179,7 +177,7 @@ const MyApplications = () => {
 
       {/* Filter tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {['All', 'Pending', 'Under Review', 'Interview', 'Accepted', 'Rejected'].map((tab) => (
+        {['All', 'Pending', 'Accepted', 'Rejected'].map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
