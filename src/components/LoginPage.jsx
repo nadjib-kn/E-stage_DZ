@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useGoogleLogin } from '@react-oauth/google';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const LoginPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login, register, loginWithGoogle, forgotPassword } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
 
   const [isSignUpActive, setIsSignUpActive] = useState(
     location.state?.isSignUp || false,
@@ -36,40 +36,8 @@ const LoginPage = () => {
     text: "",
   });
 
-  // ── Forgot Password state ─────────────────────────────────────────────────
-  const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forgotStep, setForgotStep] = useState('email'); // 'email' | 'success'
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotLoading, setForgotLoading] = useState(false);
-  const [forgotError, setForgotError] = useState('');
-
-  const openForgotModal = () => {
-    setForgotEmail('');
-    setForgotError('');
-    setForgotStep('email');
-    setShowForgotModal(true);
-  };
-
-  const closeForgotModal = () => {
-    setShowForgotModal(false);
-  };
-
-  const handleForgotSubmit = async (e) => {
-    e.preventDefault();
-    if (!forgotEmail.trim()) {
-      setForgotError('Please enter your email address.');
-      return;
-    }
-    setForgotLoading(true);
-    setForgotError('');
-    const result = await forgotPassword(forgotEmail.trim());
-    setForgotLoading(false);
-    if (result.success) {
-      setForgotStep('success');
-    } else {
-      setForgotError(result.message);
-    }
-  };
+  // ── Forgot Password: navigate to dedicated page (Google-style) ─────────────
+  const openForgotPage = () => navigate('/forgot-password');
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -235,7 +203,7 @@ const LoginPage = () => {
                 </div>
 
                 <div className="flex justify-end mb-5 mt-1">
-                  <button type="button" onClick={openForgotModal} className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+                  <button type="button" onClick={openForgotPage} className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
                     Forgot password?
                   </button>
                 </div>
@@ -364,7 +332,7 @@ const LoginPage = () => {
               </div>
 
               <div className="flex justify-end mb-6 mt-1">
-                <button type="button" onClick={openForgotModal} className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Forgot password?</button>
+                <button type="button" onClick={openForgotPage} className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Forgot password?</button>
               </div>
 
               <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-bold py-3.5 rounded-full transition-all shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] dark:shadow-[0_8px_24px_-6px_rgba(59,130,246,0.35)]">Sign In</button>
@@ -415,123 +383,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* =============================================
-          FORGOT PASSWORD MODAL
-          ============================================= */}
-      <AnimatePresence>
-        {showForgotModal && (
-          <motion.div
-            key="forgot-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-            style={{ backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', backgroundColor: 'rgba(0,0,0,0.45)' }}
-            onClick={(e) => { if (e.target === e.currentTarget) closeForgotModal(); }}
-          >
-            <motion.div
-              key="forgot-card"
-              initial={{ opacity: 0, scale: 0.94, y: 24 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 24 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-md rounded-3xl overflow-hidden bg-white dark:bg-[#0f1629] shadow-[0_30px_80px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.07),0_30px_80px_-12px_rgba(0,0,0,0.8),0_0_60px_-15px_rgba(37,99,235,0.18)]"
-            >
-              {/* Gradient accent bar at the top */}
-              <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #0ea5e9 100%)' }} />
 
-              <div className="p-6 sm:p-8">
-                {/* Close button */}
-                <button
-                  onClick={closeForgotModal}
-                  className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
-                  aria-label="Close"
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                </button>
-
-                <AnimatePresence mode="wait">
-                  {forgotStep === 'email' ? (
-                    <motion.div key="step-email" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.25 }}>
-                      <div className="w-14 h-14 rounded-2xl mb-5 flex items-center justify-center bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20">
-                        <svg className="w-7 h-7 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                      </div>
-
-                      <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-1">Forgot your password?</h2>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">No worries — enter your email address and we'll send you a link to reset your password.</p>
-
-                      <form onSubmit={handleForgotSubmit} className="flex flex-col gap-4">
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Email address</label>
-                          <input
-                            id="forgot-email-input"
-                            type="email"
-                            placeholder="you@example.com"
-                            value={forgotEmail}
-                            onChange={(e) => { setForgotEmail(e.target.value); setForgotError(''); }}
-                            required
-                            autoFocus
-                            className={inputClass}
-                          />
-                        </div>
-
-                        {forgotError && (
-                          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="text-sm p-3 rounded-xl border bg-red-50 text-red-500 border-red-100 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800/60">
-                            {forgotError}
-                          </motion.div>
-                        )}
-
-                        <button
-                          id="forgot-submit-btn"
-                          type="submit"
-                          disabled={forgotLoading}
-                          className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-bold py-3.5 rounded-full transition-all shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] dark:shadow-[0_8px_24px_-6px_rgba(59,130,246,0.35)] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                          {forgotLoading ? (
-                            <>
-                              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                              Sending...
-                            </>
-                          ) : 'Send Reset Link'}
-                        </button>
-
-                        <button type="button" onClick={closeForgotModal} className="w-full text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 py-2 transition-colors">Back to Sign In</button>
-                      </form>
-                    </motion.div>
-                  ) : (
-                    <motion.div key="step-success" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="flex flex-col items-center text-center py-4">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
-                        className="w-20 h-20 rounded-full mb-6 flex items-center justify-center bg-emerald-50 dark:bg-emerald-500/10 border-2 border-emerald-200 dark:border-emerald-500/30"
-                      >
-                        <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                      </motion.div>
-
-                      <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Check your inbox!</h2>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-2">We've sent a password reset link to</p>
-                      <span className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-6 break-all">{forgotEmail}</span>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed mb-8">Didn't receive it? Check your spam folder or wait a few minutes.</p>
-
-                      <button
-                        id="forgot-back-to-login-btn"
-                        onClick={closeForgotModal}
-                        className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-bold py-3.5 rounded-full transition-all shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] dark:shadow-[0_8px_24px_-6px_rgba(59,130,246,0.35)]"
-                      >
-                        Back to Sign In
-                      </button>
-
-                      <button type="button" onClick={() => { setForgotStep('email'); setForgotError(''); }} className="mt-3 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">Try a different email</button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
