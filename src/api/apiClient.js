@@ -14,11 +14,11 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Global error handler — redirect to login on 401
+// Global error handler — redirect to login on 401 (if not already there)
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && window.location.pathname !== '/login') {
       localStorage.removeItem('eStageToken');
       localStorage.removeItem('eStageUser');
       window.location.href = '/login';
