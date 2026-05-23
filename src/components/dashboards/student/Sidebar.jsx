@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { useTheme } from '../../../context/ThemeContext'; 
+import { useTheme } from '../../../context/ThemeContext';
 
 const ThemeToggleButton = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -20,34 +20,25 @@ const ThemeToggleButton = () => {
   );
 };
 
-const Sidebar = () => {
-  const navigate = useNavigate();
-  const { currentUser, logout } = useAuth(); // Pull in the current user data globally
-
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
-  const handleLogoutClick = (e) => {
-    e.stopPropagation(); // Prevents the profile click event
-    setShowLogoutConfirm(true);
-  };
-
-  const confirmLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
-  // Safe fallbacks just in case the data hasn't loaded yet or fields are empty
+const SidebarContent = ({ onClose, navigate, currentUser, handleLogoutClick }) => {
   const avatarImage = currentUser?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Default&backgroundColor=ffffff";
   const fullName = currentUser?.firstName ? `${currentUser.firstName} ${currentUser.lastName || ''}`.trim() : "Student";
   const specialty = currentUser?.major || "Student";
 
+  const navLinkClass = ({ isActive }) =>
+    `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all duration-200 ${isActive
+      ? 'bg-blue-50 dark:bg-blue-500/10 text-[#2563EB]'
+      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+    }`;
+
+  const handleNav = () => { if (onClose) onClose(); };
+
   return (
     <div className="w-64 bg-white dark:bg-slate-800 h-full border-r border-slate-200 dark:border-slate-700 flex flex-col flex-shrink-0 transition-colors duration-300">
-      
+
       {/* 1. Top Logo Section */}
-      <div className="p-6 pb-3"> {/* Increased padding slightly to accommodate bigger logo */}
+      <div className="p-6 pb-3 flex items-center justify-between">
         <div className="px-2">
-          {/* New Brand SVG Logo - Made slightly bigger (h-10 instead of h-8) */}
           <svg width="153" height="34" viewBox="0 0 153 34" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-auto h-10">
             <rect width="38" height="34" rx="16" fill="#2563EB"/>
             <path d="M19 26L12 22.2V16.2L8 14L19 8L30 14V22H28V15.1L26 16.2V22.2L19 26ZM19 17.7L25.85 14L19 10.3L12.15 14L19 17.7ZM19 23.725L24 21.025V17.25L19 20L14 17.25V21.025L19 23.725Z" fill="white"/>
@@ -56,43 +47,45 @@ const Sidebar = () => {
           </svg>
           <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold mt-2 ml-1">Student Portal</p>
         </div>
+        {/* Close button for mobile */}
+        {onClose && (
+          <button onClick={onClose} className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        )}
       </div>
 
       {/* 2. Main Navigation Menu */}
       <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
         <nav className="space-y-1.5">
           <p className="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 mt-4">Menu</p>
-          
-          <NavLink to="/student" end className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all duration-200 ${isActive ? 'bg-blue-50 dark:bg-blue-500/10 text-[#2563EB]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'}`}>
+
+          <NavLink to="/student" end className={navLinkClass} onClick={handleNav}>
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
             <span>Dashboard</span>
           </NavLink>
 
-          <NavLink to="/student/browse" className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all duration-200 ${isActive ? 'bg-blue-50 dark:bg-blue-500/10 text-[#2563EB]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'}`}>
+          <NavLink to="/student/browse" className={navLinkClass} onClick={handleNav}>
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <span>Browse Offers</span>
           </NavLink>
 
-          <NavLink to="/student/applications" className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all duration-200 ${isActive ? 'bg-blue-50 dark:bg-blue-500/10 text-[#2563EB]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'}`}>
+          <NavLink to="/student/applications" className={navLinkClass} onClick={handleNav}>
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
             <span>My Applications</span>
           </NavLink>
 
-          <NavLink to="/student/profile" className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all duration-200 ${isActive ? 'bg-blue-50 dark:bg-blue-500/10 text-[#2563EB]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'}`}>
+          <NavLink to="/student/profile" className={navLinkClass} onClick={handleNav}>
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             <span>My Profile</span>
           </NavLink>
 
-          <NavLink 
-            to="/student/support" 
-            className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all duration-200 ${isActive ? 'bg-blue-50 dark:bg-blue-500/10 text-[#2563EB]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'}`}
-          >
+          <NavLink to="/student/support" className={navLinkClass} onClick={handleNav}>
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <span>Support & Help</span>
           </NavLink>
-
         </nav>
       </div>
 
@@ -103,41 +96,91 @@ const Sidebar = () => {
 
       {/* 3. Bottom Profile & Logout */}
       <div className="p-4 border-t border-slate-100 dark:border-slate-700">
-        <div 
-          onClick={() => navigate('/student/profile')} 
+        <div
+          onClick={() => { navigate('/student/profile'); if (onClose) onClose(); }}
           className="flex items-center justify-between p-2 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition-colors group cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-600"
         >
-          
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 overflow-hidden shrink-0">
               <img src={avatarImage} alt={fullName} className="w-full h-full object-cover"/>
             </div>
             <div className="truncate pr-2">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate leading-tight group-hover:text-[#2563EB] transition-colors">
-                {fullName}
-              </h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5" title={specialty}>
-                {specialty}
-              </p>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate leading-tight group-hover:text-[#2563EB] transition-colors">{fullName}</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5" title={specialty}>{specialty}</p>
             </div>
           </div>
-
-          <button 
+          <button
             onClick={handleLogoutClick}
             title="Logout"
             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all shrink-0 z-10"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
           </button>
-          
         </div>
       </div>
+    </div>
+  );
+};
+
+const Sidebar = () => {
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const handleLogoutClick = (e) => {
+    e.stopPropagation();
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  return (
+    <>
+      {/* ── Desktop sidebar (always visible on lg+) ── */}
+      <div className="hidden lg:flex h-full">
+        <SidebarContent navigate={navigate} currentUser={currentUser} handleLogoutClick={handleLogoutClick} />
+      </div>
+
+      {/* ── Mobile top bar ── */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 shadow-sm">
+        <button
+          onClick={() => setIsMobileOpen(true)}
+          className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          aria-label="Open menu"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <span className="text-sm font-bold text-slate-900 dark:text-white">Student Portal</span>
+        <div className="w-10" /> {/* spacer */}
+      </div>
+
+      {/* ── Mobile drawer overlay ── */}
+      {isMobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          {/* backdrop */}
+          <div
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+            onClick={() => setIsMobileOpen(false)}
+          />
+          {/* drawer */}
+          <div className="relative z-10 h-full shadow-2xl">
+            <SidebarContent
+              onClose={() => setIsMobileOpen(false)}
+              navigate={navigate}
+              currentUser={currentUser}
+              handleLogoutClick={handleLogoutClick}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-800 rounded-[24px] w-full max-w-sm shadow-2xl relative p-6 md:p-8 text-center">
             <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-5 ring-8 ring-red-50/50 dark:ring-red-500/20">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
@@ -145,18 +188,13 @@ const Sidebar = () => {
             <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Log out?</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">Are you sure you want to log out of your student account?</p>
             <div className="flex gap-3 w-full">
-              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-3 rounded-xl text-sm font-bold transition-colors">
-                Cancel
-              </button>
-              <button onClick={confirmLogout} className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-red-500/30">
-                Log Out
-              </button>
+              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-3 rounded-xl text-sm font-bold transition-colors">Cancel</button>
+              <button onClick={confirmLogout} className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-red-500/30">Log Out</button>
             </div>
           </div>
         </div>
       )}
-
-    </div>
+    </>
   );
 };
 
