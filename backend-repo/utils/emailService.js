@@ -4,12 +4,16 @@ const nodemailer = require('nodemailer');
 const createTransporter = () => {
   // Gmail (preferred — set GMAIL_USER + GMAIL_APP_PASSWORD in env)
   if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    // Strip accidental quotes if user copy-pasted them in Render dashboard
+    const user = process.env.GMAIL_USER.replace(/^"|"$/g, '').trim();
+    const pass = process.env.GMAIL_APP_PASSWORD.replace(/^"|"$/g, '').trim();
+
     return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+      connectionTimeout: 10000, // 10s timeout to prevent hanging
     });
   }
 
