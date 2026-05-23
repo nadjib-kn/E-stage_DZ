@@ -301,6 +301,15 @@ router.post('/forgot-password', async (req, res) => {
 
     const emailSent = await sendPasswordResetEmail(user.email, userName, resetLink);
 
+    if (emailSent && emailSent.error) {
+      // Revert token if email failed
+      await prisma.user.update({
+        where: { email },
+        data: { resetToken: null, resetTokenExpiry: null },
+      });
+      return res.status(500).json({ success: false, message: 'Failed to send reset email: ' + emailSent.error });
+    }
+
     if (!emailSent) {
       // Revert token if email failed
       await prisma.user.update({

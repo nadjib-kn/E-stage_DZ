@@ -127,7 +127,7 @@ const sendPasswordResetEmail = async (userEmail, userName, resetLink) => {
     return await sendMail(mailOptions);
   } catch (error) {
     console.error('[emailService] sendPasswordResetEmail error:', error);
-    return false;
+    return { error: error.message || String(error) };
   }
 };
 
