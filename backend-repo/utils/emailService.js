@@ -1,24 +1,15 @@
 const nodemailer = require('nodemailer');
-const dns = require('dns');
-
-// Force IPv4 resolution (Render free tier doesn't support outbound IPv6)
-dns.setDefaultResultOrder('ipv4first');
 
 // ─── Transporter: prefers Gmail, falls back to generic SMTP, then mock ─────────
 const createTransporter = () => {
   // Gmail (preferred — set GMAIL_USER + GMAIL_APP_PASSWORD in env)
   if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    // Strip accidental quotes if user copy-pasted them in Render dashboard
-    const user = process.env.GMAIL_USER.replace(/^"|"$/g, '').trim();
-    const pass = process.env.GMAIL_APP_PASSWORD.replace(/^"|"$/g, '').trim();
-
     return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // STARTTLS
-      requireTLS: true,
-      auth: { user, pass },
-      connectionTimeout: 10000,
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
     });
   }
 
@@ -132,7 +123,7 @@ const sendPasswordResetEmail = async (userEmail, userName, resetLink) => {
     return await sendMail(mailOptions);
   } catch (error) {
     console.error('[emailService] sendPasswordResetEmail error:', error);
-    return { error: error.message || String(error) };
+    return false;
   }
 };
 

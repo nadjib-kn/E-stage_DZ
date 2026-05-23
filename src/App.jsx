@@ -13,7 +13,6 @@ import ContactUs from './components/ContactUs';
 import Footer from './components/Footer';
 import LoginPage from './components/LoginPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
-import ForgotPasswordPage from './components/ForgotPasswordPage';
 
 // Import Student Pages
 import DashboardOverview from './components/dashboards/student/DashboardOverview';
@@ -128,12 +127,6 @@ const AnimatedRoutes = () => {
         <Route path="/reset-password" element={
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
             <ResetPasswordPage />
-          </motion.div>
-        } />
-
-        <Route path="/forgot-password" element={
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-            <ForgotPasswordPage />
           </motion.div>
         } />
 
