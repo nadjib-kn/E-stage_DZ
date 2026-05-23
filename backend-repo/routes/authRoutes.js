@@ -299,15 +299,16 @@ router.post('/forgot-password', async (req, res) => {
     const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
     const userName = user.role === 'student' ? user.firstName : user.companyName;
 
-    const emailSent = await sendPasswordResetEmail(user.email, userName, resetLink);
+    const emailResult = await sendPasswordResetEmail(user.email, userName, resetLink);
 
-    if (!emailSent) {
+    if (!emailResult || !emailResult.success) {
       // Revert token if email failed
       await prisma.user.update({
         where: { email },
         data: { resetToken: null, resetTokenExpiry: null },
       });
-      return res.status(500).json({ success: false, message: 'Failed to send reset email. Please try again later.' });
+      const errMsg = emailResult?.error || 'Failed to send reset email. Please try again later.';
+      return res.status(500).json({ success: false, message: `Failed: ${errMsg}` });
     }
 
     res.status(200).json({ success: true, message: 'If that email exists, a reset link has been sent.' });

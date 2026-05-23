@@ -43,12 +43,17 @@ const sendMail = async (mailOptions) => {
     console.log('To:', mailOptions.to);
     console.log('Subject:', mailOptions.subject);
     console.log('=========================================\n');
-    return true;
+    return { success: true };
   }
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log('✅ Email sent:', info.messageId);
-  return true;
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent:', info.messageId);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Transporter error:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 // ─── Password Reset Email ──────────────────────────────────────────────────────
@@ -123,7 +128,7 @@ const sendPasswordResetEmail = async (userEmail, userName, resetLink) => {
     return await sendMail(mailOptions);
   } catch (error) {
     console.error('[emailService] sendPasswordResetEmail error:', error);
-    return false;
+    return { success: false, error: error.message };
   }
 };
 
