@@ -1,4 +1,8 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+// Force IPv4 resolution (Render free tier doesn't support outbound IPv6)
+dns.setDefaultResultOrder('ipv4first');
 
 // ─── Transporter: prefers Gmail, falls back to generic SMTP, then mock ─────────
 const createTransporter = () => {
