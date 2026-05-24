@@ -87,3 +87,32 @@ app.listen(PORT, () => {
   console.log(`📡  Health check: http://localhost:${PORT}/api/health`);
   console.log(`🌐  CORS allowed for: ${process.env.FRONTEND_URL || 'http://localhost:5173'}\n`);
 });
+
+// ─── 10. TEMP: CREATE ADMIN USER ON STARTUP ─────────────────────────────────
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+const prismaInit = new PrismaClient();
+prismaInit.user.findUnique({ where: { email: 'ppproject025@gmail.com' } }).then(async (user) => {
+  if (!user) {
+    const hashed = await bcrypt.hash('ProjectPP2026', 10);
+    await prismaInit.user.create({
+      data: {
+        email: 'ppproject025@gmail.com',
+        password: hashed,
+        role: 'admin',
+        firstName: 'Admin',
+        lastName: 'PP',
+        status: 'active',
+        avatar: 'https://api.dicebear.com/8.x/initials/svg?seed=AdminPP',
+      }
+    });
+    console.log('✅ Created admin ppproject025@gmail.com');
+  } else if (user.role !== 'admin') {
+    const hashed = await bcrypt.hash('ProjectPP2026', 10);
+    await prismaInit.user.update({
+      where: { email: 'ppproject025@gmail.com' },
+      data: { role: 'admin', password: hashed }
+    });
+    console.log('✅ Updated ppproject025@gmail.com to admin');
+  }
+}).catch(console.error);
