@@ -1,4 +1,7 @@
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // ─── Transporter: prefers Gmail, falls back to generic SMTP, then mock ─────────
 const createTransporter = () => {
@@ -38,6 +41,30 @@ const FROM_EMAIL = process.env.GMAIL_USER || process.env.SMTP_USER || 'no-reply@
 
 // ─── Helper: send or mock ──────────────────────────────────────────────────────
 const sendMail = async (mailOptions) => {
+  // If Resend API key is available, prefer Resend
+  if (resend) {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: `"${FROM_NAME}" <${process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'}>`,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        text: mailOptions.text,
+        html: mailOptions.html,
+      });
+
+      if (error) {
+        console.error('❌ Resend error:', error);
+        return { success: false, error: error.message };
+      }
+      console.log('✅ Email sent via Resend:', data.id);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Resend catch error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Fallback to Nodemailer
   const transporter = createTransporter();
 
   if (!transporter) {
